@@ -8,6 +8,7 @@ use crate::autograd::backward;
 
 use super::backward::Backward;
 
+
 // use super::backward::Backward;
 
 
@@ -47,6 +48,22 @@ impl Graph {
     id
   }
 
+  pub fn sin(&mut self, lhs: usize) -> usize {
+    let data = f32::sin(self.values[lhs].data);
+    let id = self.values.len();
+    let value = Value::new(data, id, &[lhs], "sin");
+    self.values.push(value);
+    id
+  }
+
+  pub fn cos(&mut self, lhs: usize) -> usize {
+    let data = f32::cos(self.values[lhs].data);
+    let id = self.values.len();
+    let value = Value::new(data, id, &[lhs], "cos");
+    self.values.push(value);
+    id
+  }
+
   pub fn backward(&self, id: usize) {
     self.values[id].grad.set(1.0);
     self.backward_from(id);
@@ -72,6 +89,16 @@ impl Graph {
         let rhs = value.prev[1];
             
         self.mul_backward(lhs, rhs, grad);
+      },
+      "sin" => {
+        let lhs = value.prev[0];
+            
+        self.sin_backward(lhs, grad);
+      },
+      "cos" => {
+        let lhs = value.prev[0];
+            
+        self.cos_backward(lhs, grad);
       },
       _ => {}
     }

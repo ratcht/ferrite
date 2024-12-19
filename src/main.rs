@@ -18,24 +18,22 @@ fn main() {
 
   let mut graph = scalar::Graph::new();
 
-  let a = graph.scalar(2.);
-  let b = graph.scalar(-3.);
-  let c = graph.scalar(10.);
-  let e = graph.mul(a, b);
-  let d = graph.add(e, c);
-  let f = graph.scalar(-2.);
-  let L = graph.mul(d, f);
+  let x = graph.scalar(1.75);
+  let a = graph.scalar(-1.2);
+  let b = graph.scalar(1.9);
+  let z = graph.scalar(2.2);
+  let a1 = graph.mul(x, a);
+  let a2 = graph.sin(a1);
+  let a3 = graph.mul(b,a2);
+  let y = graph.add(a3, z);
 
-  graph.backward(L);
+  graph.backward(y);
 
+  println!("Grad of x: {:?}", graph.get(x).grad);
   println!("Grad of a: {:?}", graph.get(a).grad);
   println!("Grad of b: {:?}", graph.get(b).grad);
-  println!("Grad of c: {:?}", graph.get(c).grad);
-  println!("Grad of e: {:?}", graph.get(e).grad);
-  println!("Grad of d: {:?}", graph.get(d).grad);
-  println!("Grad of f: {:?}", graph.get(f).grad);
-  println!("Grad of L: {:?}", graph.get(L).grad);
-
+  println!("Grad of z: {:?}", graph.get(z).grad);
+  println!("Grad of y: {:?}", graph.get(y).grad);
 
 }
 
