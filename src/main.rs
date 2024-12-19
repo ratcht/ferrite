@@ -1,39 +1,38 @@
-mod tensor;  // if your file is tensor.rs
-mod autograd;
+mod tensor;
+mod autograd;  // Declare the module
+use autograd::*;  // Import everything public from autograd
 
 
-use tensor::Tensor;
-use autograd::scalar;
-
-use ndarray::prelude::*;
 
 
 fn main() {
-  // let arr = array![[4, 2, 5], [2, 6,7]];
+  let graph = Graph::new();
+  
 
-  // let test = Tensor::from_ndarray(&arr, true);
 
-  // test.print();
-  // test.print_data();
+  let x = graph.scalar(0.8);
+  let two = graph.scalar(2.);
+  let twox = graph.mul(two, x);
+  let etwox = graph.exp(twox);
 
-  let mut graph = scalar::Graph::new();
+  let one = graph.scalar(1.);
+  let none = graph.scalar(-1.);
 
-  let x = graph.scalar(1.75);
-  let a = graph.scalar(-1.2);
-  let b = graph.scalar(1.9);
-  let z = graph.scalar(2.2);
-  let a1 = graph.mul(x, a);
-  let a2 = graph.sin(a1);
-  let a3 = graph.mul(b,a2);
-  let y = graph.add(a3, z);
+  let num = graph.add(etwox, none);
+  let denum = graph.add(etwox, one);
 
+  let y = graph.div(num, denum);
+
+
+  println!("Forward pass values:");
+  println!("y = {}", graph.get_value(y));
+  println!("x = {}", graph.get_value(x));
+  
   graph.backward(y);
+  
+  println!("\nGradients:");
+  println!("dy/dy = {}", graph.get_grad(y));
+  println!("dy/dx = {}", graph.get_grad(x));
 
-  println!("Grad of x: {:?}", graph.get(x).grad);
-  println!("Grad of a: {:?}", graph.get(a).grad);
-  println!("Grad of b: {:?}", graph.get(b).grad);
-  println!("Grad of z: {:?}", graph.get(z).grad);
-  println!("Grad of y: {:?}", graph.get(y).grad);
 
 }
-
