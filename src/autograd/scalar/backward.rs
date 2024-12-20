@@ -13,7 +13,6 @@ pub trait Backward {
   fn backward(&self, value: Value);
   fn backward_from(&self, idx: usize);
 
-
 }
 
 impl Backward for Graph {

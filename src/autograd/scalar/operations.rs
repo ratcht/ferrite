@@ -3,17 +3,17 @@ use std::ops::{Add, Sub, Mul, Div};
 
 
 pub trait Operations<'a> {
-  fn add(&self, lhs_val: &Value, rhs_val: &Value) -> Value<'_>;
-  fn sub(&self, lhs_val: &Value, rhs_val: &Value) -> Value<'_>;
-  fn mul(&self, lhs_val: &Value, rhs_val: &Value) -> Value<'_>;
-  fn div(&self, lhs_val: &Value, rhs_val: &Value) -> Value<'_>;
-  fn exp(&self, lhs_val: &Value) -> Value<'_>;
-  fn pow(&self, lhs_val: &Value, rhs_val: &Value) -> Value<'_>;
+  fn add(&self, lhs_val: Value, rhs_val: Value) -> Value<'_>;
+  fn sub(&self, lhs_val: Value, rhs_val: Value) -> Value<'_>;
+  fn mul(&self, lhs_val: Value, rhs_val: Value) -> Value<'_>;
+  fn div(&self, lhs_val: Value, rhs_val: Value) -> Value<'_>;
+  fn exp(&self, lhs_val: Value) -> Value<'_>;
+  fn pow(&self, lhs_val: Value, rhs_val: Value) -> Value<'_>;
 
 }
 
 impl<'a> Operations<'a> for Graph {
-  fn add(&self, lhs_val: &Value, rhs_val: &Value) -> Value<'_> {
+  fn add(&self, lhs_val: Value, rhs_val: Value) -> Value<'_> {
     let lhs = lhs_val.idx;
     let rhs = rhs_val.idx;
 
@@ -32,7 +32,7 @@ impl<'a> Operations<'a> for Graph {
     }
   }
 
-  fn sub(&self, lhs_val: &Value, rhs_val: &Value) -> Value<'_> {
+  fn sub(&self, lhs_val: Value, rhs_val: Value) -> Value<'_> {
     let lhs = lhs_val.idx;
     let rhs = rhs_val.idx;
 
@@ -52,7 +52,7 @@ impl<'a> Operations<'a> for Graph {
   }
 
 
-  fn mul(&self, lhs_val: &Value, rhs_val: &Value) -> Value<'_> {
+  fn mul(&self, lhs_val: Value, rhs_val: Value) -> Value<'_> {
     let lhs = lhs_val.idx;
     let rhs = rhs_val.idx;
 
@@ -68,7 +68,7 @@ impl<'a> Operations<'a> for Graph {
     }
   }
 
-  fn div(&self, lhs_val: &Value, rhs_val: &Value) -> Value<'_> {
+  fn div(&self, lhs_val: Value, rhs_val: Value) -> Value<'_> {
     let lhs = lhs_val.idx;
     let rhs = rhs_val.idx;
     let mut scalars = self.scalars.borrow_mut();
@@ -84,7 +84,7 @@ impl<'a> Operations<'a> for Graph {
     }
   }
 
-  fn exp(&self, lhs_val: &Value) -> Value<'_> {
+  fn exp(&self, lhs_val: Value) -> Value<'_> {
     let lhs = lhs_val.idx;
 
     let mut scalars = self.scalars.borrow_mut();
@@ -99,7 +99,7 @@ impl<'a> Operations<'a> for Graph {
     }
   }
 
-  fn pow(&self, lhs_val: &Value, rhs_val: &Value) -> Value<'_> {
+  fn pow(&self, lhs_val: Value, rhs_val: Value) -> Value<'_> {
     let lhs = lhs_val.idx;
     let rhs = rhs_val.idx;
     let mut scalars = self.scalars.borrow_mut();
@@ -125,7 +125,7 @@ impl<'a> Add<Value<'a>> for Value<'a> {
   type Output = Value<'a>;
 
   fn add(self, rhs: Self) -> Self::Output {
-    self.graph.add(&self, &rhs)
+    self.graph.add(self, rhs)
   }
 }
 
@@ -134,7 +134,7 @@ impl<'a> Add<f32> for Value<'a> {
 
   fn add(self, rhs: f32) -> Self::Output {
     let scalar = self.graph.scalar(rhs, false);
-    self.graph.add(&self, &scalar)
+    self.graph.add(self, scalar)
   }
 }
 
@@ -143,7 +143,7 @@ impl<'a> Add<Value<'a>> for f32 {
 
   fn add(self, rhs: Value<'a>) -> Self::Output {
     let scalar = rhs.graph.scalar(self, false);
-    rhs.graph.add(&scalar, &rhs)
+    rhs.graph.add(scalar, rhs)
   }
 }
 
@@ -155,7 +155,7 @@ impl<'a> Sub<Value<'a>> for Value<'a> {
   type Output = Value<'a>;
 
   fn sub(self, rhs: Self) -> Self::Output {
-    self.graph.sub(&self, &rhs)
+    self.graph.sub(self, rhs)
   }
 }
 
@@ -164,7 +164,7 @@ impl<'a> Sub<f32> for Value<'a> {
 
   fn sub(self, rhs: f32) -> Self::Output {
     let scalar = self.graph.scalar(rhs, false);
-    self.graph.sub(&self, &scalar)
+    self.graph.sub(self, scalar)
   }
 }
 
@@ -173,7 +173,7 @@ impl<'a> Sub<Value<'a>> for f32 {
 
   fn sub(self, rhs: Value<'a>) -> Self::Output {
     let scalar = rhs.graph.scalar(self, false);
-    rhs.graph.sub(&scalar, &rhs)
+    rhs.graph.sub(scalar, rhs)
   }
 }
 
@@ -186,7 +186,7 @@ impl<'a> Mul<Value<'a>> for Value<'a> {
   type Output = Value<'a>;
 
   fn mul(self, rhs: Self) -> Self::Output {
-    self.graph.mul(&self, &rhs)
+    self.graph.mul(self, rhs)
   }
 }
 
@@ -195,7 +195,7 @@ impl<'a> Mul<f32> for Value<'a> {
 
   fn mul(self, rhs: f32) -> Self::Output {
     let scalar = self.graph.scalar(rhs, false);
-    self.graph.mul(&self, &scalar)
+    self.graph.mul(self, scalar)
   }
 }
 
@@ -204,7 +204,7 @@ impl<'a> Mul<Value<'a>> for f32 {
 
   fn mul(self, rhs: Value<'a>) -> Self::Output {
     let scalar = rhs.graph.scalar(self, false);
-    rhs.graph.mul(&scalar, &rhs)
+    rhs.graph.mul(scalar, rhs)
   }
 }
 
@@ -218,7 +218,7 @@ impl<'a> Div<Value<'a>> for Value<'a> {
   type Output = Value<'a>;
 
   fn div(self, rhs: Self) -> Self::Output {
-    self.graph.div(&self, &rhs)
+    self.graph.div(self, rhs)
   }
 }
 
@@ -227,7 +227,7 @@ impl<'a> Div<f32> for Value<'a> {
 
   fn div(self, rhs: f32) -> Self::Output {
     let scalar = self.graph.scalar(rhs, false);
-    self.graph.div(&self, &scalar)
+    self.graph.div(self, scalar)
   }
 }
 
@@ -236,6 +236,6 @@ impl<'a> Div<Value<'a>> for f32 {
 
   fn div(self, rhs: Value<'a>) -> Self::Output {
     let scalar = rhs.graph.scalar(self, false);
-    rhs.graph.div(&scalar, &rhs)
+    rhs.graph.div(scalar, rhs)
   }
 }

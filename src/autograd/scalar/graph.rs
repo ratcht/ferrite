@@ -1,6 +1,5 @@
 // scalar.rs
 
-use std::borrow::Borrow;
 use std::cell::{Cell, RefCell};
 use std::fmt;
 
