@@ -58,8 +58,13 @@ impl TensorShape for Tensor {
   }
 
   fn squeeze(&mut self) {
-    todo!()
-  }
+    // Remove all 1 dimension from the shape
+    let shape: Vec<usize> = self.shape().to_owned().iter().filter(|&&x| x != 1).cloned().collect();
+    let stride = Tensor::compute_strides(&shape);
+
+    self.set_shape(shape);
+    self.set_stride(stride);
+  } 
 
   fn unsqueeze(&mut self, dim: usize) {
     todo!()
