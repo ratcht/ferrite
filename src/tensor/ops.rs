@@ -58,7 +58,7 @@ impl TensorOps for Tensor {
 
     for col in 0..other.shape()[1] {
       for row in 0..self.shape()[0] {
-        let mut dot = 0;
+        let mut dot = 0.;
         for i in 0..self.shape()[1] {
           dot += self.data()[row * self.shape()[1] + i] * other.data()[i * other.shape()[1] + col];
         }
