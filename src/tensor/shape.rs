@@ -1,3 +1,5 @@
+use std::{borrow::Borrow, rc::Rc};
+
 use super::base::Tensor;  // Import from parent module's base.rs
 pub trait TensorShape {
   fn reshape(&mut self, new_shape: Vec<usize>);
@@ -6,6 +8,14 @@ pub trait TensorShape {
   fn flatten(&mut self);
   fn squeeze(&mut self);
   fn unsqueeze(&mut self, dim: usize);
+
+  fn broadcast(&self, new_shape: &[usize]) -> Tensor;
+  fn compute_broadcast_shape(&self, target_shape: &[usize]) -> Vec<usize>;
+  fn compute_broadcast_strides(&self, broadcast_shape: &[usize]) -> Vec<usize>;
+  fn pad_shape(&self, target_rank: usize) -> Vec<usize>;
+  fn broadcast_tensors(a: &Tensor, b: &Tensor) -> (Tensor, Tensor);
+
+
 }
 
 
@@ -54,6 +64,100 @@ impl TensorShape for Tensor {
   fn unsqueeze(&mut self, dim: usize) {
     todo!()
   }
+
+  fn broadcast(&self, new_shape: &[usize]) -> Tensor {
+    // Verify broadcast compatibility and get output shape
+    let broadcast_shape = self.compute_broadcast_shape(new_shape);
+    
+    // Calculate new strides for broadcasting
+    let broadcast_strides = self.compute_broadcast_strides(&broadcast_shape);
+
+    Tensor::create(self.data(), broadcast_shape, broadcast_strides, self.requires_grad())
+  }
+
+  /// Compute broadcast shape between two shapes
+  fn compute_broadcast_shape(&self, target_shape: &[usize]) -> Vec<usize> {
+    let self_rank = self.shape().len();
+    let target_rank = target_shape.len();
+    let max_rank = std::cmp::max(self_rank, target_rank);
+    
+    // Pad shapes with 1s to match maximum rank
+    let self_padded = self.pad_shape(max_rank);
+    let mut result_shape = Vec::with_capacity(max_rank);
+
+    // Compare dimensions from right to left
+    for i in 0..max_rank {
+      let self_dim = self_padded[i];
+      let target_dim = if i >= max_rank - target_rank {
+          target_shape[i - (max_rank - target_rank)]
+        } else {
+          1
+        };
+
+      if self_dim == target_dim {
+        result_shape.push(self_dim);
+      } else if self_dim == 1 {
+        result_shape.push(target_dim);
+      } else if target_dim == 1 {
+        result_shape.push(self_dim);
+      } else {
+        panic!(
+          "Incompatible broadcast dimensions: {} and {}",
+          self_dim, target_dim
+        )
+      }
+    }
+
+    result_shape
+  }
+
+  /// Compute broadcast strides
+  fn compute_broadcast_strides(&self, broadcast_shape: &[usize]) -> Vec<usize> {
+    let self_rank = self.shape().len();
+    let broadcast_rank = broadcast_shape.len();
+    let rank_diff = broadcast_rank - self_rank;
+    
+    let mut new_strides = vec![0; broadcast_rank];
+    
+    // Fill in strides for dimensions that match or are broadcasted
+    for i in 0..self_rank {
+      let broadcast_idx = i + rank_diff;
+      if broadcast_shape[broadcast_idx] == self.shape()[i] {
+        new_strides[broadcast_idx] = self.stride()[i];
+      } else if self.shape()[i] == 1 {
+        new_strides[broadcast_idx] = 0;  // Stride of 0 for broadcasted dimensions
+      } else {
+        panic!("Invalid broadcast shape")
+      }
+    }
+
+    new_strides
+  }
+
+  /// Pad shape with ones on the left
+  fn pad_shape(&self, target_rank: usize) -> Vec<usize> {
+    let mut padded = vec![1; target_rank];
+    let rank_diff = target_rank - self.shape().len();
+    padded[rank_diff..].copy_from_slice(self.shape());
+    padded
+  }
+
+  fn broadcast_tensors(a: &Tensor, b: &Tensor) -> (Tensor, Tensor) {
+    // Get the shape that both tensors should broadcast to
+    let a_shape = a.shape();
+    let b_shape = b.shape();
+    
+    // Use a's compute_broadcast_shape to get the final shape
+    let broadcast_shape = a.compute_broadcast_shape(b_shape);
+    
+    // Broadcast both tensors to the new shape
+    let broadcast_a = a.broadcast(&broadcast_shape);
+    let broadcast_b = b.broadcast(&broadcast_shape);
+    
+    (broadcast_a, broadcast_b)
+  }
   
   
 }
+
+

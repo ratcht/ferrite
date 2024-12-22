@@ -1,9 +1,13 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+
 
 #[derive(Clone)]
 pub struct Tensor {
-  data: Vec<f32>,
+  data: Rc<RefCell<Vec<f32>>>,
   shape: Vec<usize>,
   stride: Vec<usize>,
+  offset: usize,
   requires_grad: bool,
 }
 
@@ -12,12 +16,13 @@ impl Tensor {
   pub fn new(data: Vec<f32>, shape: Vec<usize>, requires_grad: bool) -> Self {
     // Check data
     if data.len() != shape.iter().product() { panic!("Data does not match shape!");}
-    let stride = Tensor::compute_stride(&shape);
+    let stride = Tensor::compute_strides(&shape);
     Tensor {
-      data,
-      shape,
-      stride,
-      requires_grad,
+      data: Rc::new(RefCell::new(data)),
+      shape: shape,
+      stride: stride,
+      offset: 0,
+      requires_grad: requires_grad,
     }
   }
 
@@ -25,19 +30,50 @@ impl Tensor {
     // Check data
     if data.len() != shape.iter().product() { panic!("Data does not match shape!");}
     Tensor {
-      data,
-      shape,
-      stride,
-      requires_grad,
+      data: Rc::new(RefCell::new(data)),
+      shape: shape,
+      stride: stride,
+      offset: 0,
+      requires_grad: requires_grad,
     }
   }
 
-  pub fn data(&self) -> &Vec<f32> {
-    &self.data
+  pub fn create(data: Rc<RefCell<Vec<f32>>>, shape: Vec<usize>, stride: Vec<usize>, requires_grad: bool) -> Self {
+    // Check data
+    Tensor {
+      data: data,
+      shape: shape,
+      stride: stride,
+      offset: 0,
+      requires_grad: requires_grad,
+    }
+  }
+
+  pub fn view(&self, new_shape: Vec<usize>) -> Self {
+    // Check if the new shape is compatible
+    let total_elements: usize = new_shape.iter().product();
+    if total_elements != self.shape().iter().product() { panic!("New shape must have the same number of elements"); }
+    let stride = Tensor::compute_strides(&new_shape);
+
+    Tensor {
+      data: Rc::clone(&self.data),
+      shape: new_shape,
+      stride: stride,
+      offset: self.offset,
+      requires_grad: self.requires_grad,
+    }
+  }
+
+  pub fn data(&self) -> Rc<RefCell<Vec<f32>>> {
+    Rc::clone(&self.data)
+  }
+
+  pub fn data_mut(&self) -> std::cell::RefMut<Vec<f32>> {
+    self.data.borrow_mut()
   }
 
   pub fn set_data(&mut self, data: Vec<f32>){
-    self.data = data;
+    self.data = Rc::new(RefCell::new(data));
   }
 
   pub fn shape(&self) -> &Vec<usize> {
@@ -52,7 +88,7 @@ impl Tensor {
     &self.stride
   }
 
-  pub fn compute_stride(shape: &Vec<usize>) -> Vec<usize> {
+  pub fn compute_strides(shape: &Vec<usize>) -> Vec<usize> {
     let mut stride = vec![1; shape.len()];
     for i in (0..shape.len() - 1).rev() {
       stride[i] = stride[i + 1] * shape[i + 1];
@@ -85,8 +121,31 @@ impl Tensor {
     }
 
     // Return the value if the flat index is valid
-    self.data()[flat_index]
+    self.data().borrow()[flat_index]
   }
+
+  pub fn set(&mut self, indices: &[usize], value: f32) {
+    // Ensure the number of indices matches the tensor's dimensions
+    if indices.len() != self.shape().len() { panic!("Tensor index does not match shape!"); }
+
+    // Compute the flat index
+    let mut flat_index = 0;
+    for (i, &idx) in indices.iter().enumerate() {
+      // Validate the index for this dimension
+      if idx >= self.shape()[i] {
+        panic!("Tensor index out of bounds!");
+      }
+
+      // Accumulate the flat index
+      flat_index += idx * self.stride()[i];
+    }
+
+    self.data().borrow_mut()[flat_index] = value;
+  }
+
+
+
+
 }
 
 

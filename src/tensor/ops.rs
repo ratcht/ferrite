@@ -14,8 +14,8 @@ impl TensorOps for Tensor {
     // For now, no broadcasting
     if self.shape() != other.shape() { panic!("Tensor shapes don't match!") }
 
-    let data = self.data().iter()
-    .zip(other.data().iter())
+    let data = self.data().borrow().iter()
+    .zip(other.data().borrow().iter())
     .map(|(a, b)| a + b)
     .collect();
 
@@ -26,8 +26,8 @@ impl TensorOps for Tensor {
     // For now, no broadcasting
     if self.shape() != other.shape() { panic!("Tensor shapes don't match!") }
 
-    let data = self.data().iter()
-    .zip(other.data().iter())
+    let data = self.data().borrow().iter()
+    .zip(other.data().borrow().iter())
     .map(|(a, b)| a * b)
     .collect();
 
@@ -35,7 +35,7 @@ impl TensorOps for Tensor {
   }
 
   fn add_f32(&self, other: f32) -> Self {
-    let data = self.data().iter()
+    let data = self.data().borrow().iter()
     .map(|a| a + other)
     .collect();
 
@@ -43,7 +43,7 @@ impl TensorOps for Tensor {
   }
 
   fn mul_f32(&self, other: f32) -> Self {
-    let data = self.data().iter()
+    let data = self.data().borrow().iter()
     .map(|a| a * other)
     .collect();
 
@@ -60,7 +60,7 @@ impl TensorOps for Tensor {
       for row in 0..self.shape()[0] {
         let mut dot = 0.;
         for i in 0..self.shape()[1] {
-          dot += self.data()[row * self.shape()[1] + i] * other.data()[i * other.shape()[1] + col];
+          dot += self.data().borrow()[row * self.shape()[1] + i] * other.data().borrow()[i * other.shape()[1] + col];
         }
         data[row*other.shape()[1]+ col ] = dot;
       }

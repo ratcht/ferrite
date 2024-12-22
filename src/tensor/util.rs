@@ -10,7 +10,7 @@ pub trait Display {
 
 impl fmt::Display for Tensor {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "{}", Self::print_data_recursive(self.data(), self.shape(), self.stride()))
+    write!(f, "{}", Self::print_data_recursive(&self.data().borrow(), self.shape(), self.stride()))
   }
 }
 
@@ -50,7 +50,7 @@ impl Display for Tensor {
   }
 
   fn print_data(&self) {
-    let res = Self::print_data_recursive(self.data(), self.shape(), self.stride());
+    let res = Self::print_data_recursive(&self.data().borrow(), self.shape(), self.stride());
     println!("{}", res);
   }
 }
