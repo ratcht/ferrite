@@ -1,6 +1,6 @@
 use std::{borrow::Borrow, rc::Rc};
 
-use super::base::Tensor;  // Import from parent module's base.rs
+use super::base::TensorStorage;  // Import from parent module's base.rs
 pub trait TensorShape {
   fn reshape(&mut self, new_shape: Vec<usize>);
   fn permute(&mut self, dims: &[usize]);
@@ -9,17 +9,15 @@ pub trait TensorShape {
   fn squeeze(&mut self);
   fn unsqueeze(&mut self, dim: usize);
 
-  fn broadcast(&self, new_shape: &[usize]) -> Tensor;
+  fn broadcast(&self, new_shape: &[usize]) -> Self;
   fn compute_broadcast_shape(&self, target_shape: &[usize]) -> Vec<usize>;
   fn compute_broadcast_strides(&self, broadcast_shape: &[usize]) -> Vec<usize>;
   fn pad_shape(&self, target_rank: usize) -> Vec<usize>;
-  fn broadcast_tensors(a: &Tensor, b: &Tensor) -> (Tensor, Tensor);
-
-
+  fn broadcast_tensors(a: &Self, b: &Self) -> (Self, Self) where Self: Sized;
 }
 
 
-impl TensorShape for Tensor {
+impl TensorShape for TensorStorage {
   fn reshape(&mut self, new_shape: Vec<usize>) {
     self.set_shape(new_shape);
   }
@@ -60,7 +58,7 @@ impl TensorShape for Tensor {
   fn squeeze(&mut self) {
     // Remove all 1 dimension from the shape
     let shape: Vec<usize> = self.shape().to_owned().iter().filter(|&&x| x != 1).cloned().collect();
-    let stride = Tensor::compute_strides(&shape);
+    let stride = TensorStorage::compute_strides(&shape);
 
     self.set_shape(shape);
     self.set_stride(stride);
@@ -69,20 +67,20 @@ impl TensorShape for Tensor {
   fn unsqueeze(&mut self, dim: usize) {
     let mut shape: Vec<usize> = self.shape().to_owned();
     shape.insert(dim, 1);
-    let stride = Tensor::compute_strides(&shape);
+    let stride = TensorStorage::compute_strides(&shape);
 
     self.set_shape(shape);
     self.set_stride(stride);
   }
 
-  fn broadcast(&self, new_shape: &[usize]) -> Tensor {
+  fn broadcast(&self, new_shape: &[usize]) -> TensorStorage {
     // Verify broadcast compatibility and get output shape
     let broadcast_shape = self.compute_broadcast_shape(new_shape);
     
     // Calculate new strides for broadcasting
     let broadcast_strides = self.compute_broadcast_strides(&broadcast_shape);
 
-    Tensor::create(self.data(), broadcast_shape, broadcast_strides, self.requires_grad())
+    TensorStorage::create(self.data(), broadcast_shape, broadcast_strides)
   }
 
   /// Compute broadcast shape between two shapes
@@ -152,7 +150,7 @@ impl TensorShape for Tensor {
     padded
   }
 
-  fn broadcast_tensors(a: &Tensor, b: &Tensor) -> (Tensor, Tensor) {
+  fn broadcast_tensors(a: &Self, b: &Self) -> (Self, Self) {
     // Get the shape that both tensors should broadcast to
     let a_shape = a.shape();
     let b_shape = b.shape();

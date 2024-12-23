@@ -1,4 +1,4 @@
-use super::base::Tensor;  // Import from parent module's base.rs
+use super::base::TensorStorage;  // Import from parent module's base.rs
 
 use std::fmt;
 
@@ -8,18 +8,23 @@ pub trait Display {
   fn print_data(&self);
 }
 
-impl fmt::Display for Tensor {
+impl fmt::Display for TensorStorage {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     write!(f, "{}", Self::print_data_recursive(&self.data().borrow(), self.shape(), self.stride()))
   }
 }
 
-impl Display for Tensor {
+impl fmt::Debug for TensorStorage {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    write!(f, "{}", Self::print_data_recursive(&self.data().borrow(), self.shape(), self.stride()))
+  }
+}
+
+impl Display for TensorStorage {
   fn print(&self) {
     println!("Data: {:?}", self.data());
     println!("Shape: {:?}", self.shape());
     println!("Strides: {:?}", self.stride());
-    println!("Requires grad: {:?}", self.requires_grad());
   }
 
   fn print_data_recursive<'a>(data: &'a [f32], shape: &'a [usize], stride: &'a [usize]) -> String {

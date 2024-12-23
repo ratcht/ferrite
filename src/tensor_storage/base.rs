@@ -3,49 +3,45 @@ use std::cell::RefCell;
 
 
 #[derive(Clone)]
-pub struct Tensor {
+pub struct TensorStorage {
   data: Rc<RefCell<Vec<f32>>>,
   shape: Vec<usize>,
   stride: Vec<usize>,
   offset: usize,
-  requires_grad: bool,
 }
 
 
-impl Tensor {
-  pub fn new(data: Vec<f32>, shape: Vec<usize>, requires_grad: bool) -> Self {
+impl TensorStorage {
+  pub fn new(data: Vec<f32>, shape: Vec<usize>) -> Self {
     // Check data
     if data.len() != shape.iter().product() { panic!("Data does not match shape!");}
-    let stride = Tensor::compute_strides(&shape);
-    Tensor {
+    let stride = TensorStorage::compute_strides(&shape);
+    TensorStorage {
       data: Rc::new(RefCell::new(data)),
       shape: shape,
       stride: stride,
       offset: 0,
-      requires_grad: requires_grad,
     }
   }
 
-  pub fn new_with_stride(data: Vec<f32>, shape: Vec<usize>, stride: Vec<usize>, requires_grad: bool) -> Self {
+  pub fn new_with_stride(data: Vec<f32>, shape: Vec<usize>, stride: Vec<usize>) -> Self {
     // Check data
     if data.len() != shape.iter().product() { panic!("Data does not match shape!");}
-    Tensor {
+    TensorStorage {
       data: Rc::new(RefCell::new(data)),
       shape: shape,
       stride: stride,
       offset: 0,
-      requires_grad: requires_grad,
     }
   }
 
-  pub fn create(data: Rc<RefCell<Vec<f32>>>, shape: Vec<usize>, stride: Vec<usize>, requires_grad: bool) -> Self {
+  pub fn create(data: Rc<RefCell<Vec<f32>>>, shape: Vec<usize>, stride: Vec<usize>) -> Self {
     // Check data
-    Tensor {
+    TensorStorage {
       data: data,
       shape: shape,
       stride: stride,
       offset: 0,
-      requires_grad: requires_grad,
     }
   }
 
@@ -53,14 +49,13 @@ impl Tensor {
     // Check if the new shape is compatible
     let total_elements: usize = new_shape.iter().product();
     if total_elements != self.shape().iter().product() { panic!("New shape must have the same number of elements"); }
-    let stride = Tensor::compute_strides(&new_shape);
+    let stride = TensorStorage::compute_strides(&new_shape);
 
-    Tensor {
+    TensorStorage {
       data: Rc::clone(&self.data),
       shape: new_shape,
       stride: stride,
       offset: self.offset,
-      requires_grad: self.requires_grad,
     }
   }
 
@@ -98,10 +93,6 @@ impl Tensor {
 
   pub fn set_stride(&mut self, stride: Vec<usize>){
     self.stride = stride;
-  }
-
-  pub fn requires_grad(&self) -> bool {
-    self.requires_grad
   }
 
   pub fn get(&self, indices: &[usize]) -> f32 {
