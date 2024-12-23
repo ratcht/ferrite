@@ -67,7 +67,12 @@ impl TensorShape for Tensor {
   } 
 
   fn unsqueeze(&mut self, dim: usize) {
-    todo!()
+    let mut shape: Vec<usize> = self.shape().to_owned();
+    shape.insert(dim, 1);
+    let stride = Tensor::compute_strides(&shape);
+
+    self.set_shape(shape);
+    self.set_stride(stride);
   }
 
   fn broadcast(&self, new_shape: &[usize]) -> Tensor {

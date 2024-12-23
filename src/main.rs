@@ -10,12 +10,12 @@ use ndarray::prelude::*;
 
 
 fn main() {
-  let mut tensor = Tensor::from_ndarray(&array![[[[1],[2]], [[1],[2]]]], false);
+  let mut tensor = Tensor::from_ndarray(&array![[1,2],[3,4]], false);
   println!("Tensor: {}", tensor);
 
   println!("Shape: {:?}", tensor.shape());
 
-  tensor.squeeze();
+  tensor.unsqueeze(0);
 
   println!("Tensor: {}", tensor);
   println!("Shape: {:?}", tensor.shape());
