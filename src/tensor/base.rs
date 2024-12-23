@@ -143,9 +143,6 @@ impl Tensor {
     self.data().borrow_mut()[flat_index] = value;
   }
 
-
-
-
 }
 
 

@@ -10,14 +10,18 @@ use ndarray::prelude::*;
 
 
 fn main() {
-  let mut tensor = Tensor::from_ndarray(&array![[1,2],[3,4]], false);
-  println!("Tensor: {}", tensor);
+  let mut tensor1 = Tensor::from_ndarray(&array![[1,2],[3,4]], false);
+  let tensor2 = Tensor::from_ndarray(&array![[5,6],[7,8]], false);
+  let tensor = Tensor::from_ndarray(&array![[1,1],[1,1]], false);
 
-  println!("Shape: {:?}", tensor.shape());
 
-  tensor.unsqueeze(0);
+  let tensor3 = &tensor * 3.;
 
-  println!("Tensor: {}", tensor);
-  println!("Shape: {:?}", tensor.shape());
+  println!("{}", tensor2);
+
+  println!("{}", tensor);
+
+  println!("{}", tensor3);
+
 
 }
