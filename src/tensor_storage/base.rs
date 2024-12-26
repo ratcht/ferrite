@@ -14,7 +14,15 @@ pub struct TensorStorage {
 impl TensorStorage {
   pub fn new(data: Vec<f32>, shape: Vec<usize>) -> Self {
     // Check data
-    if data.len() != shape.iter().product() { panic!("Data does not match shape!");}
+    
+    if data.len() != shape.iter().product() { 
+      let x: usize = shape.iter().product();
+      println!("Data Len: {}. Shape iter prod {}", data.len(), x);
+      println!("Data: {:?}", data);
+
+
+      panic!("Data does not match shape!");
+    }
     let stride = TensorStorage::compute_strides(&shape);
     TensorStorage {
       data: Rc::new(RefCell::new(data)),
