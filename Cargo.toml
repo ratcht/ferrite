@@ -1,8 +1,22 @@
 [package]
-name = "tensor"
+name = "ferrite-ml"
 version = "0.1.0"
 edition = "2021"
+authors = ["a2alhama@uwaterloo.ca"]
+description = "Basic deep learning library written in pure Rust"
+readme = "README.md"
+repository = "https://github.com/ratcht/ferrite"
+license = "MIT"
+keywords = ["machine-learning", "deep-learning", "neural-networks", "tensor", "autograd"]
+categories = ["science", "mathematics", "algorithms"]
+
+[lib]
+name = "ferrite"
+path = "src/lib.rs"
 
 [dependencies]
 ndarray = "0.16.1"
 num-traits = "0.2.19"
+
+[dev-dependencies]
+criterion = "0.5"

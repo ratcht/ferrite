@@ -1,14 +1,5 @@
-mod tensor_storage;  // Makes the tensor module public
-use tensor_storage::*;  // Import everything public from autograd
-
-mod autograd;  // Declare the module
-use autograd::tensor::*;  // Import everything public from autograd
-
-mod network;
-use network::*;
-
+use ferrite::prelude::*;
 use ndarray::prelude::*;
-
 
 
 pub struct SimpleNetwork {
