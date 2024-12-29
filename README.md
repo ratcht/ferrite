@@ -69,7 +69,7 @@ let zeros = Tensor::zeros(vec![2, 3], Some(true));
 let data = Tensor::from_ndarray(&array![[1.0, 2.0], [3.0, 4.0]], Some(true));
 ```
 
-### Neural Network Module
+### Neural Network Module (Will update when finished)
 
 ```rust
 impl SimpleNetwork {
