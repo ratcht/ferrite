@@ -1,4 +1,4 @@
-# Oxidize: A Deep Learning Library in Rust
+# Ferrite: A Deep Learning Library in Rust
 
 A deep learning framework written in pure Rust, inspired by PyTorch. Used this to learn Rust and refine DL concepts.
 
@@ -18,7 +18,7 @@ A deep learning framework written in pure Rust, inspired by PyTorch. Used this t
 ## Quick Start
 
 ```rust
-use oxidize::*;
+use ferrite::*;
 use ndarray::array;
 
 fn main() {
@@ -41,7 +41,7 @@ fn main() {
 
 ## Architecture
 
-Oxidize is built with a modular architecture:
+ferrite is built with a modular architecture:
 
 - **TensorStorage**: Core tensor storage and operations
 - **Tensor**: High-level tensor interface with autograd support
