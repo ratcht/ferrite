@@ -99,6 +99,5 @@ impl Segment for SimpleNetwork {
 
 ## Acknowledgments
 
-Inspired by:
-- PyTorch
+- PyTorch (for inspiration)
 - Claude (for teaching me Rust)
