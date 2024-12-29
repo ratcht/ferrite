@@ -1,13 +1,35 @@
 mod tensor_storage;  // Makes the tensor module public
 use tensor_storage::*;  // Import everything public from autograd
 
-
 mod autograd;  // Declare the module
 use autograd::tensor::*;  // Import everything public from autograd
 
+mod network;
+use network::*;
 
 use ndarray::prelude::*;
 
+
+
+pub struct SimpleNetwork {
+  module: Module,
+}
+
+impl SimpleNetwork {
+  fn new() -> Self {
+    let module = Module::new();
+
+    SimpleNetwork {
+      module: module
+    }
+  }
+}
+
+impl Segment for SimpleNetwork {
+  fn forward(input: Tensor) -> Tensor {
+    todo!()
+  }
+}
 
 
 fn main() {
@@ -17,10 +39,9 @@ fn main() {
   println!("x: {:?}", x);
   println!("y: {:?}", y);
 
-  let z = x.add_tensor(&y);
+  let z = x.mul_tensor(&y);
 
   println!("z: {:?}", z);
-
 
   let mut f = z.sum();
 
@@ -32,5 +53,4 @@ fn main() {
 
   println!("grad x: {:?}", x.grad());
   println!("grad y: {:?}", y.grad());
-
 }
