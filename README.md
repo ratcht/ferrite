@@ -6,13 +6,13 @@ A deep learning framework written in pure Rust, inspired by PyTorch. Used this t
 
 Add to your project using:
 ```bash
-cargo add ferrite-ml
+cargo add ferrite-dl
 ```
 
 Or manually add to your `Cargo.toml`:
 ```toml
 [dependencies]
-ferrite-ml = "0.1.0"
+ferrite-dl = "0.1.0"
 ```
 
 ## Features
