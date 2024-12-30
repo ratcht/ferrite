@@ -28,6 +28,15 @@ impl Tensor {
     }
   }
 
+  pub fn view(&self, tensor: TensorStorage) -> Self {
+    Tensor {
+      tensor: tensor,
+      requires_grad: self.requires_grad,
+      grad_fn: self.grad_fn.clone(),
+      grad: self.grad.clone()
+    }
+  }
+
   pub fn tensor(&self) -> &TensorStorage {
     &self.tensor
   }

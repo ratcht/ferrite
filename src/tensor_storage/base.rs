@@ -15,8 +15,8 @@ impl TensorStorage {
   pub fn new(data: Vec<f32>, shape: Vec<usize>) -> Self {
     // Check data
     
-    if data.len() != shape.iter().product() { 
-      let x: usize = shape.iter().product();
+    if data.len() != shape.iter().product::<usize>() { 
+      let x: usize = shape.iter().product::<usize>();
       println!("Data Len: {}. Shape iter prod {}", data.len(), x);
       println!("Data: {:?}", data);
 
@@ -34,7 +34,7 @@ impl TensorStorage {
 
   pub fn new_with_stride(data: Vec<f32>, shape: Vec<usize>, stride: Vec<usize>) -> Self {
     // Check data
-    if data.len() != shape.iter().product() { panic!("Data does not match shape!");}
+    if data.len() != shape.iter().product::<usize>() { panic!("Data does not match shape!");}
     TensorStorage {
       data: Rc::new(RefCell::new(data)),
       shape: shape,
@@ -56,7 +56,7 @@ impl TensorStorage {
   pub fn view(&self, new_shape: Vec<usize>) -> Self {
     // Check if the new shape is compatible
     let total_elements: usize = new_shape.iter().product();
-    if total_elements != self.shape().iter().product() { panic!("New shape must have the same number of elements"); }
+    if total_elements != self.shape().iter().product::<usize>() { panic!("New shape must have the same number of elements"); }
     let stride = TensorStorage::compute_strides(&new_shape);
 
     TensorStorage {

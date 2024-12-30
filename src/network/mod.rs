@@ -1,5 +1,5 @@
 mod module;
-mod parameter;
+pub mod layer;
 
 pub use module::*;
-pub use parameter::*;
+pub use layer as Layer;

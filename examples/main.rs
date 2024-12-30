@@ -2,25 +2,7 @@ use ferrite::prelude::*;
 use ndarray::prelude::*;
 
 
-pub struct SimpleNetwork {
-  module: Module,
-}
 
-impl SimpleNetwork {
-  fn new() -> Self {
-    let module = Module::new();
-
-    SimpleNetwork {
-      module: module
-    }
-  }
-}
-
-impl Segment for SimpleNetwork {
-  fn forward(input: Tensor) -> Tensor {
-    todo!()
-  }
-}
 
 
 fn main() {

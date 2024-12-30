@@ -26,4 +26,10 @@ impl TensorCreation for Tensor {
     let requires_grad = requires_grad.unwrap_or(false);
     Tensor::new(tensor, requires_grad)
   }
+
+  fn uniform(l_bound: f32, r_bound: f32, shape: Vec<usize>, requires_grad: Option<bool>) -> Self {
+    let tensor = TensorStorage::uniform(l_bound, r_bound, shape, None);
+    let requires_grad = requires_grad.unwrap_or(false);
+    Tensor::new(tensor, requires_grad)
+  }
 }

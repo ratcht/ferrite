@@ -7,9 +7,9 @@ impl TensorShape for Tensor {
     self.tensor_mut().set_shape(new_shape);
   }
 
-  fn transpose(&mut self) {
+  fn transpose(&self) -> Self {
     // Transpose by swapping dimensions & strides
-    self.tensor_mut().transpose();
+    self.view(self.tensor().transpose())
   }
 
   fn permute(&mut self, dims: &[usize]) {

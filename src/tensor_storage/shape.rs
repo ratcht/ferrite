@@ -4,7 +4,7 @@ use super::base::TensorStorage;  // Import from parent module's base.rs
 pub trait TensorShape {
   fn reshape(&mut self, new_shape: Vec<usize>);
   fn permute(&mut self, dims: &[usize]);
-  fn transpose(&mut self);
+  fn transpose(&self) -> Self;
   fn flatten(&mut self);
   fn squeeze(&mut self);
   fn unsqueeze(&mut self, dim: usize);
@@ -22,7 +22,7 @@ impl TensorShape for TensorStorage {
     self.set_shape(new_shape);
   }
 
-  fn transpose(&mut self) {
+  fn transpose(&self) -> Self {
     // Transpose by swapping dimensions & strides
     if self.shape().len() != 2 { panic!("Must be 2-D Tensor (Matrix)"); }
 
@@ -32,8 +32,7 @@ impl TensorShape for TensorStorage {
     let mut stride = self.stride().to_owned();
     stride.reverse();
 
-    self.set_shape(shape);
-    self.set_stride(stride);
+    TensorStorage::create(self.data(), shape, stride)
   }
 
   fn permute(&mut self, dims: &[usize]) {

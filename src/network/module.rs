@@ -3,14 +3,13 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
 
-use super::parameter::*;
 
 pub trait Segment {
-  fn forward(input: Tensor) -> Tensor;
+  fn forward(&mut self, input: Tensor) -> Tensor;
 }
 
 pub struct Module {
-  parameters: HashMap<String, Rc<RefCell<Parameter>>>,
+  parameters: HashMap<String, Rc<RefCell<Tensor>>>,
   modules: HashMap<String, Rc<RefCell<Module>>>,
   training: bool
 }
@@ -24,8 +23,16 @@ impl Module {
     }
   }
 
-  pub fn add_parameter(&mut self, name: &str, parameter: Parameter) {
+  pub fn add_parameter(&mut self, name: &str, parameter: Tensor) {
     self.parameters.insert(name.to_string(), Rc::new(RefCell::new(parameter)));
+  }
+
+  pub fn has_parameter(&self, name: &str) -> bool {
+    self.parameters.contains_key(name)
+  }
+
+  pub fn get_parameter(&mut self, name: &str) -> Rc<RefCell<Tensor>>{
+    self.parameters[name].clone()
   }
 
   pub fn add_module(&mut self, name: &str, module: Module) {
@@ -34,7 +41,7 @@ impl Module {
 
   pub fn visit_parameters<F>(&self, mut f: F)
   where
-    F: FnMut(&Parameter)
+    F: FnMut(&Tensor)
   {
     // Visit parameters in current module
     for (name, param) in &self.parameters {
