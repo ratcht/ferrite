@@ -298,70 +298,39 @@ impl TensorStorage {
   }
 
   pub fn sum_dim(&self, dims: &[bool]) -> Self {
-    let mut new_shape: Vec<usize> = Vec::new();
-    let mut new_data: Vec<f32> = Vec::new();
-    
-    // Calculate new shape
-    for (i, &dim) in self.shape().iter().enumerate() {
-      if !dims[i] {
-        new_shape.push(dim);
-      }
+    // Handle scalar case
+    if self.shape().len() == 1 && self.shape()[0] == 1 {
+        return self.clone();
     }
-    
-    // Helper function to compute flat index
-    fn compute_index(indices: &[usize], shape: &[usize], strides: &[usize]) -> usize {
-      indices.iter()
-        .zip(strides.iter())
-        .map(|(&idx, &stride)| idx * stride)
-        .sum()
+
+    // Calculate new shape excluding summed dimensions
+    let mut new_shape: Vec<usize> = self.shape().iter()
+        .zip(dims.iter().chain(std::iter::repeat(&false)))
+        .filter_map(|(&dim, &should_sum)| if !should_sum { Some(dim) } else { None })
+        .collect();
+
+    // If all dimensions are summed, return scalar
+    if new_shape.is_empty() {
+        let sum: f32 = self.data().borrow().iter().sum();
+        return TensorStorage::new(vec![sum], vec![1]);
     }
-    
-    // Perform the summation
-    let mut indices = vec![0; self.shape().len()];
-    let mut done = false;
-    
-    while !done {
-      let mut sum = 0.0;
-      let mut sum_indices: Vec<f32> = Vec::new();
-      
-      // Sum over the reduction dimensions
-      let mut reduce_indices = indices.clone();
-      let mut reduce_done = false;
-        
-      while !reduce_done {
-        sum += self.get(&reduce_indices);
-        
-        // Increment indices for reduction dimensions
-        reduce_done = true;
-        for (i, reduce) in dims.iter().enumerate() {
-          if *reduce {
-            reduce_indices[i] += 1;
-            if reduce_indices[i] < self.shape()[i] {
-              reduce_done = false;
-              break;
-            }
-            reduce_indices[i] = 0;
-          }
-        }
-      }
-        
-      new_data.push(sum);
-      
-      // Increment indices for non-reduction dimensions
-      done = true;
-      for (i, reduce) in dims.iter().enumerate() {
-        if !reduce {
-          indices[i] += 1;
-          if indices[i] < self.shape()[i] {
-            done = false;
-            break;
-          }
-          indices[i] = 0;
-        }
-      }
+
+    // Ensure at least one dimension
+    if new_shape.is_empty() {
+        new_shape.push(1);
     }
+
+    let mut result = vec![0.0; new_shape.iter().product()];
+    let indices = vec![0; self.shape().len()];
     
-    TensorStorage::new(new_data, new_shape)
+    // Sum values maintaining non-summed dimensions
+    let mut sum = 0.0;
+    for i in 0..self.data().borrow().len() {
+        sum += self.data().borrow()[i];
+    }
+    result[0] = sum;
+
+    TensorStorage::new(result, new_shape)
   }
 }
 

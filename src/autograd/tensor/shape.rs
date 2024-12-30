@@ -1,6 +1,9 @@
+use std::rc::Rc;
+
 use crate::tensor_storage::*;
 use crate::TensorShape;
 use super::base::*;
+use super::PermuteGrad;
 
 impl TensorShape for Tensor {
   fn reshape(&mut self, new_shape: Vec<usize>) {
@@ -9,7 +12,16 @@ impl TensorShape for Tensor {
 
   fn transpose(&self) -> Self {
     // Transpose by swapping dimensions & strides
-    self.view(self.tensor().transpose())
+
+    let tensor = self.tensor().transpose();
+    let requires_grad = *self.requires_grad();
+    let mut result = Tensor::new(tensor, requires_grad);
+    
+    if requires_grad {
+      result.set_grad_fn(Some(Rc::new(PermuteGrad::new(self, &result))));
+    }
+    
+    result
   }
 
   fn permute(&mut self, dims: &[usize]) {
