@@ -7,7 +7,7 @@ mod utils;     // Internal module
 
 // Re-export what you want public
 pub use base::TensorStorage;
-pub use ops::TensorOps;
+pub use ops::{TensorOps, BLASTensorOps};
 pub use creation::TensorCreation;
 pub use shape::TensorShape;
 pub use utils::Display;

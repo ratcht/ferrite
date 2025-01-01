@@ -143,9 +143,24 @@ impl TensorOps for Tensor {
     self.tensor_mut().div_f32_assign(other);
   }
 
-  fn matmul(&self, other: &Self) -> Self {
-    let tensor = self.tensor().matmul(other.tensor());
-    Tensor::new(tensor, false)
+}
+
+impl BLASTensorOps for Tensor {
+  fn matmul(&self, other: &Self, trans_a: bool, trans_b: bool) -> Self {
+    let tensor = self.tensor().matmul(other.tensor(), trans_a, trans_b);
+    
+    let requires_grad = *self.requires_grad() || *other.requires_grad();
+    let mut result = Tensor::new(tensor, requires_grad);
+    
+    if requires_grad {
+      result.set_grad_fn(Some(Rc::new(MatMulGrad::new(
+        self,
+        other,
+        &result
+      ))));
+    }
+    
+    result
   }
 }
 

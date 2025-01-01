@@ -27,7 +27,6 @@ pub trait TensorOps {
   fn div_f32(&self, other: f32) -> Self;
   fn div_f32_assign(&mut self, other: f32);
 
-  fn matmul(&self, other: &Self) -> Self;
 
   fn sum(&self) -> Self;
   fn product(&self) -> Self;
@@ -105,24 +104,7 @@ impl TensorOps for TensorStorage {
     self.scalar_op_assign(other, |a, b| a / b)
   }
 
-  fn matmul(&self, other: &Self) -> Self {
-    if self.shape().len() != 2 { panic!("Can't Matmul on non-matrices"); }
-    if self.shape()[1] != other.shape()[0] { panic!("Array2D dimensions do not match for multiplication."); }
-
-    let mut data = vec![1.0; self.shape()[0] * other.shape()[1]];
-
-    for col in 0..other.shape()[1] {
-      for row in 0..self.shape()[0] {
-        let mut dot = 0.;
-        for i in 0..self.shape()[1] {
-          dot += self.data().borrow()[row * self.shape()[1] + i] * other.data().borrow()[i * other.shape()[1] + col];
-        }
-        data[row * other.shape()[1] + col] = dot;
-      }
-    }
-
-    TensorStorage::new(data, vec![self.shape()[0], other.shape()[1]])
-  }
+  
 
   fn sum(&self) -> Self {
     let data: f32 = self.data().borrow().iter().sum();
@@ -139,6 +121,66 @@ impl TensorOps for TensorStorage {
     TensorStorage::from_ndarray(&array![data], None)
   }
 }
+
+
+#[link(name = "openblas")] // Replace "openblas" with the library you installed if different
+extern "C" {
+  fn cblas_ddot(n: i32, x: *const f64, incx: i32, y: *const f64, incy: i32) -> f64;
+  fn cblas_dgemv(Layout: u8, trans: u8, m: i32, n: i32, alpha: f64, a: *const f64, lda: i32, x: *const f64, incx: i32, beta: f64, y: *mut f64, incy: i32);
+  fn cblas_sgemm(Layout: u8, transa: u8, transb: u8, m: i32, n: i32, k: i32, alpha: f32, a: *const f32, lda: i32, b: *const f32, ldb: i32, beta: f32, c: *mut f32, ldc: i32);
+}
+
+// CBLAS_LAYOUT
+const CBLAS_ROW_MAJOR: u8 = 101;
+const CBLAS_COL_MAJOR: u8 = 102;
+
+// CBLAS_TRANSPOSE
+const CBLAS_NO_TRANS: u8 = 111;
+const CBLAS_TRANS: u8 = 112;
+const CBLAS_CONJ_TRANS: u8 = 113;
+
+pub trait BLASTensorOps {
+  fn matmul(&self, other: &Self, trans_a: bool, trans_b: bool) -> Self;
+}
+
+
+impl BLASTensorOps for TensorStorage {
+  fn matmul(&self, other: &Self, transpose_self: bool, transpose_other: bool) -> Self {
+    if self.shape().len() != 2 { panic!("Can't Matmul on non-matrices"); }
+
+    println!("Self shape: {:?}", self.shape());
+    println!("other shape: {:?}", other.shape());
+    // A = 3x2  B = 3x5
+    if transpose_self && (self.shape()[0] != other.shape()[0]) { 
+      panic!("Matrix dimensions do not match for multiplication.");
+    } else if transpose_other && (self.shape()[1] != other.shape()[1]) { 
+      panic!("Matrix dimensions do not match for multiplication.");
+    } else if !transpose_other && !transpose_self && self.shape()[1] != other.shape()[0] { 
+      panic!("Matrix dimensions do not match for multiplication.");
+    }
+
+    let layout = CBLAS_ROW_MAJOR;
+    let trans_a = if transpose_self { CBLAS_TRANS } else { CBLAS_NO_TRANS }; let trans_b = if transpose_other { CBLAS_TRANS } else { CBLAS_NO_TRANS };
+    let a = self.data();
+    let m = if !transpose_self { self.shape()[0] as i32 } else { self.shape()[1] as i32 } ; let k = if !transpose_self { self.shape()[1] as i32 } else { self.shape()[0] as i32 };
+    let n = if !transpose_other { other.shape()[1] as i32 } else { other.shape()[0] as i32 };
+    let lda = self.shape()[1] as i32;   // width/columns of matrix A
+    let ldb = other.shape()[1] as i32;  // width/columns of matrix B in its original form
+    let ldc = n;  // width of output matrix
+    let b = other.data();
+    let alpha = 1.;
+    let beta = 0.;
+    let dim_c = vec![m as usize,n as usize];
+    let mut c = vec![0.0; dim_c.iter().product()];  
+
+    unsafe {
+      let result = cblas_sgemm(layout, trans_a, trans_b, m, n, k, alpha, a.borrow().as_ptr(), lda, b.borrow().as_ptr(), ldb, beta, c.as_mut_ptr(), ldc);
+      TensorStorage::new(c, dim_c)
+    }
+
+  }
+}
+
 
 impl TensorStorage {
   fn elementwise_op<F>(&self, other: &Self, op: F) -> Self
@@ -441,3 +483,4 @@ impl DivAssign<f32> for TensorStorage {
     self.div_f32_assign(rhs);
   }
 }
+

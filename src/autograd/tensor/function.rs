@@ -322,3 +322,59 @@ impl GradientFunction for PermuteGrad {
     vec![&self.input]
   }
 }
+
+#[derive(Debug)]
+pub struct MatMulGrad {
+  lhs: Tensor,
+  rhs: Tensor,
+  output: Tensor,
+}
+
+impl MatMulGrad {
+  pub fn new(lhs: &Tensor, rhs: &Tensor, output: &Tensor) -> Self {
+    MatMulGrad {
+      lhs: lhs.clone(),
+      rhs: rhs.clone(),
+      output: output.clone(),
+    }
+  }
+}
+
+impl GradientFunction for MatMulGrad {
+  fn backward(&self) {
+    let out_grad = self.output.grad().unwrap();
+    let out_grad = out_grad.borrow();
+    // C = A @ B
+    // dC/dA = gradC @ B.T
+    // dC/dB = A.T @ gradC
+
+    // A: dC/dA = gradC @ B.T
+    println!("Shapes: ");
+    println!("A: {:?}", self.lhs.tensor().shape());
+    println!("B: {:?}", self.rhs.tensor().shape());
+    println!("C: {:?}", out_grad.shape());
+    if let Some(lhs_grad) = &self.lhs.grad() {
+      let grad_for_lhs = &out_grad.matmul(self.rhs.tensor(), false, true);
+
+      // Handle broadcasting
+      lhs_grad.borrow_mut().add_tensor_assign(&grad_for_lhs);
+      println!("done lhs:{:?}", lhs_grad);
+    }
+
+    // Propagate to rhs
+    if let Some(rhs_grad) = &self.rhs.grad() {
+      println!("outgrad shape: {:?}", out_grad.shape());
+      println!("lhs shape: {:?}", self.lhs.tensor().shape());
+      let grad_for_rhs = &self.lhs.tensor().matmul(&out_grad, true, false);
+      
+      // Handle broadcasting
+      rhs_grad.borrow_mut().add_tensor_assign(&grad_for_rhs);
+      println!("done rhs:{:?}", rhs_grad);
+
+    }
+  }
+
+  fn prev(&self) -> Vec<&Tensor> {
+    vec![&self.lhs, &self.rhs]
+  }
+}

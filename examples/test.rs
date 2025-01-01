@@ -6,6 +6,8 @@ extern "C" {
 
 use ndarray::prelude::*;
 
+use ferrite::prelude::*;
+
 // CBLAS_LAYOUT
 const CBLAS_ROW_MAJOR: u8 = 101;
 const CBLAS_COL_MAJOR: u8 = 102;
@@ -16,19 +18,15 @@ const CBLAS_TRANS: u8 = 112;
 const CBLAS_CONJ_TRANS: u8 = 113;
 
 fn main() {
-  let layout = CBLAS_ROW_MAJOR;
-  let trans = CBLAS_NO_TRANS;
-  let a: Vec<f64> = array![[1.,2.,3.],[4.,5.,6.]].flatten().to_vec();
-  let m = 2;
-  let n = 3;
-  let lda = 3;
-  let x: Vec<f64> = vec![1.0, 1.0, 1.0];
-  let alpha = 1.;
-  let beta = 0.;
-  let mut y: Vec<f64> = vec![0.0, 0.0];
+  let mut a = Tensor::from_ndarray(&array![[1., 2.], [3., 4.], [5., 6.]], Some(false)); // 3 x 2
+  let mut b = Tensor::from_ndarray(&array![[1., 1., 1., 1.], [1., 1., 1., 1.]], Some(false)); // 2 x 4
 
-  unsafe {
-    let result = cblas_dgemv(layout, trans, m, n, alpha, a.as_ptr(), lda, x.as_ptr(), 1, beta, y.as_mut_ptr(), 1);
-    println!("Dot product: {:?}", y);
-  }
+  println!("A: {}", a);
+  println!("B: {}", b);
+
+
+  let c = a.matmul(&b, false, false);
+
+  println!("C: {}", c);
+
 }

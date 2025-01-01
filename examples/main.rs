@@ -6,26 +6,22 @@ use ndarray::prelude::*;
 
 
 fn main() {
-  let x = Tensor::from_ndarray(&array![[1,2,3],[4,5,6]], Some(true));
-  let x_t = x.transpose();
-  let y = Tensor::from_ndarray(&array![[2]], Some(true));
+  let a = Tensor::from_ndarray(&array![[1.,2.,3.],[4.,5.,6.]], Some(true)); //(2x3)
+  let b = Tensor::from_ndarray(&array![[2.,2.,2.,2.,1.], [2.,2.,2.,2.,1.], [2.,2.,2.,2.,1.]], Some(true)); //(3,5)
 
-  println!("x: {:?}", x);
-  println!("x_t: {:?}", x_t);
-  println!("y: {:?}", y);
-
-  let z = x_t.mul_tensor(&y);
-
-  println!("z: {:?}", z);
-
-  let mut f = z.sum();
-
+  let y = a.matmul(&b, false, false);
+  
+  let mut f = y.sum();
   f.backward();
 
-  println!("grad f: {:?}", f.grad());
+  println!("A: {}", a);
+  println!("B: {}", b);
+  println!("y: {}", y);
+  println!("f: {}", f);
 
-  println!("grad z: {:?}", z.grad());
+  println!("grad: A: {:?}", a.grad());
+  println!("grad: B: {:?}", b.grad());
+  println!("grad: y: {:?}", y.grad());
+  println!("grad: f: {:?}", f.grad());
 
-  println!("grad x: {:?}", x.grad());
-  println!("grad y: {:?}", y.grad());
 }

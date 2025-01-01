@@ -42,7 +42,7 @@ impl Segment for Linear {
     let w_t = weight_tensor.transpose();
 
     // Perform matrix multiplication
-    let output = input.matmul(&w_t);
+    let output = input;
 
     // Add bias if present
     if self.module.has_parameter("bias") {
