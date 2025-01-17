@@ -5,7 +5,7 @@ use std::cell::RefCell;
 
 
 pub trait Segment {
-  fn forward(&mut self, input: Tensor) -> Tensor;
+  fn forward(&mut self, input: &Tensor) -> Tensor;
 }
 
 pub struct Module {
@@ -39,18 +39,15 @@ impl Module {
     self.modules.insert(name.to_string(), Rc::new(RefCell::new(module)));
   }
 
-  pub fn visit_parameters<F>(&self, mut f: F)
-  where
-    F: FnMut(&Tensor)
-  {
+  pub fn visit_parameters(&self, f: &mut dyn FnMut(&str, &Tensor)) {
     // Visit parameters in current module
     for (name, param) in &self.parameters {
-      f(&*param.borrow());
+      f(name, &*param.borrow());
     }
     
     // Recursively visit child modules
     for (name, module) in &self.modules {
-      module.borrow().visit_parameters(&mut f);
+      module.borrow().visit_parameters(f);
     }
   }
 

@@ -150,12 +150,8 @@ impl TensorShape for TensorStorage {
   }
 
   fn broadcast_tensors(a: &Self, b: &Self) -> (Self, Self) {
-    // Get the shape that both tensors should broadcast to
-    let a_shape = a.shape();
-    let b_shape = b.shape();
-    
     // Use a's compute_broadcast_shape to get the final shape
-    let broadcast_shape = a.compute_broadcast_shape(b_shape);
+    let broadcast_shape = a.compute_broadcast_shape(b.shape());
     
     // Broadcast both tensors to the new shape
     let broadcast_a = a.broadcast(&broadcast_shape);

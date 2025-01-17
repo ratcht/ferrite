@@ -1,24 +1,24 @@
 use super::super::*;
 use crate::autograd::tensor::*;
-use crate::{TensorOps, TensorShape, TensorCreation};
+use crate::{TensorOps, BLASTensorOps, TensorShape, TensorCreation};
 use std::borrow::Borrow;
 use std::rc::Rc;
 use std::cell::{Ref, RefCell};
 
 pub struct Linear {
-  module: Module,
+  pub module: Module,
   in_features: usize,
   out_features: usize,
 }
 
 
 impl Linear {
-  fn new(in_features: usize, out_features: usize, bias: bool) -> Self {
+  pub fn new(in_features: usize, out_features: usize, bias: bool) -> Self {
     let mut module = Module::new();
 
     // Add weight to module
     let bound = f32::sqrt(1./in_features as f32);
-    module.add_parameter("weight", Tensor::uniform(-bound, bound, vec![in_features, out_features], Some(true)));
+    module.add_parameter("weight", Tensor::uniform(-bound, bound, vec![out_features, in_features], Some(true)));
 
     if bias {
       module.add_parameter("bias", Tensor::zeros(vec![out_features], Some(true)));
@@ -35,14 +35,15 @@ impl Linear {
 
 
 impl Segment for Linear {
-  fn forward(&mut self, input: Tensor) -> Tensor {
+  fn forward(&mut self, input: &Tensor) -> Tensor {
     // Get weight parameter and access its tensor
     let weight: Rc<RefCell<Tensor>> = self.module.get_parameter("weight");
     let weight_tensor = weight.borrow_mut();
     let w_t = weight_tensor.transpose();
 
     // Perform matrix multiplication
-    let output = input;
+    println!("Matmul: Self:{}\n Other:{}", input, w_t);
+    let output = input.matmul(&w_t, false, false);
 
     // Add bias if present
     if self.module.has_parameter("bias") {

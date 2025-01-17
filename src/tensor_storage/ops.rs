@@ -174,7 +174,7 @@ impl BLASTensorOps for TensorStorage {
     let mut c = vec![0.0; dim_c.iter().product()];  
 
     unsafe {
-      let result = cblas_sgemm(layout, trans_a, trans_b, m, n, k, alpha, a.borrow().as_ptr(), lda, b.borrow().as_ptr(), ldb, beta, c.as_mut_ptr(), ldc);
+      let _result = cblas_sgemm(layout, trans_a, trans_b, m, n, k, alpha, a.borrow().as_ptr(), lda, b.borrow().as_ptr(), ldb, beta, c.as_mut_ptr(), ldc);
       TensorStorage::new(c, dim_c)
     }
 
@@ -363,7 +363,6 @@ impl TensorStorage {
     }
 
     let mut result = vec![0.0; new_shape.iter().product()];
-    let indices = vec![0; self.shape().len()];
     
     // Sum values maintaining non-summed dimensions
     let mut sum = 0.0;

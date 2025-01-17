@@ -1,6 +1,6 @@
-use super::{Graph, Operations, Scalar, Value};  // Import Graph from parent module
+use super::{Graph, Scalar, Value};  // Import Graph from parent module
 // scalar.rs
-use std::cell::{Cell, RefCell};
+use std::cell::{RefCell};
 use std::collections::HashSet;
 
 pub trait Backward {
