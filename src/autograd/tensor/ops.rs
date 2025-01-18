@@ -156,12 +156,15 @@ impl BLASTensorOps for Tensor {
       result.set_grad_fn(Some(Rc::new(MatMulGrad::new(
         self,
         other,
-        &result
+        &result,
+        trans_a,
+        trans_b
       ))));
     }
     
     result
   }
+
 }
 
 impl Add<&Tensor> for &Tensor {

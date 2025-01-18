@@ -148,9 +148,7 @@ impl BLASTensorOps for TensorStorage {
   fn matmul(&self, other: &Self, transpose_self: bool, transpose_other: bool) -> Self {
     if self.shape().len() != 2 { panic!("Can't Matmul on non-matrices"); }
 
-    println!("Self shape: {:?}", self.shape());
-    println!("other shape: {:?}", other.shape());
-    // A = 3x2  B = 3x5
+    // Check dimensions
     if transpose_self && (self.shape()[0] != other.shape()[0]) { 
       panic!("Matrix dimensions do not match for multiplication.");
     } else if transpose_other && (self.shape()[1] != other.shape()[1]) { 
@@ -160,29 +158,39 @@ impl BLASTensorOps for TensorStorage {
     }
 
     let layout = CBLAS_ROW_MAJOR;
-    let trans_a = if transpose_self { CBLAS_TRANS } else { CBLAS_NO_TRANS }; let trans_b = if transpose_other { CBLAS_TRANS } else { CBLAS_NO_TRANS };
-    let a = self.data();
-    let m = if !transpose_self { self.shape()[0] as i32 } else { self.shape()[1] as i32 } ; let k = if !transpose_self { self.shape()[1] as i32 } else { self.shape()[0] as i32 };
-    let n = if !transpose_other { other.shape()[1] as i32 } else { other.shape()[0] as i32 };
-    let lda = self.shape()[1] as i32;   // width/columns of matrix A
-    let ldb = other.shape()[1] as i32;  // width/columns of matrix B in its original form
-    let ldc = n;  // width of output matrix
-    let b = other.data();
-    let alpha = 1.;
-    let beta = 0.;
-    let dim_c = vec![m as usize,n as usize];
-    let mut c = vec![0.0; dim_c.iter().product()];  
+    let trans_a = if transpose_self { CBLAS_TRANS } else { CBLAS_NO_TRANS };
+    let trans_b = if transpose_other { CBLAS_TRANS } else { CBLAS_NO_TRANS };
+    
+    // Get dimensions
+    let m = if !transpose_self { self.shape()[0] } else { self.shape()[1] };
+    let k = if !transpose_self { self.shape()[1] } else { self.shape()[0] };
+    let n = if !transpose_other { other.shape()[1] } else { other.shape()[0] };
+
+    // Get contiguous data
+    let (a_data, lda) = self.make_contiguous();
+    let (b_data, ldb) = other.make_contiguous();
+
+    let mut c = vec![0.0; (m * n) as usize];
+    let ldc = n as i32;
 
     unsafe {
-      let _result = cblas_sgemm(layout, trans_a, trans_b, m, n, k, alpha, a.borrow().as_ptr(), lda, b.borrow().as_ptr(), ldb, beta, c.as_mut_ptr(), ldc);
-      TensorStorage::new(c, dim_c)
+      cblas_sgemm(
+        layout, trans_a, trans_b,
+        m as i32, n as i32, k as i32, 1.0,
+        a_data.as_ptr(), lda,
+        b_data.as_ptr(), ldb, 0.0,
+        c.as_mut_ptr(), ldc
+      );
     }
 
+    TensorStorage::new(c, vec![m as usize, n as usize])
   }
+
 }
 
 
 impl TensorStorage {
+
   fn elementwise_op<F>(&self, other: &Self, op: F) -> Self
   where
     F: Fn(f32, f32) -> f32,

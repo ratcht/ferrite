@@ -142,6 +142,31 @@ impl TensorStorage {
     self.data().borrow_mut()[flat_index] = value;
   }
 
+  pub fn make_contiguous(&self) -> (Vec<f32>, i32) {
+    if self.is_contiguous() {
+      return (self.data().borrow().clone(), self.shape()[1] as i32);
+    }
+
+    let mut contiguous = vec![0.0; self.shape().iter().product()];
+    for i in 0..self.shape()[0] {
+      for j in 0..self.shape()[1] {
+        contiguous[i * self.shape()[1] + j] = self.get(&[i, j]);
+      }
+    }
+    (contiguous, self.shape()[1] as i32)
+  }
+  
+  pub fn is_contiguous(&self) -> bool {
+    let mut expected_stride = 1;
+    for i in (0..self.shape().len()).rev() {
+      if self.stride()[i] != expected_stride {
+        return false;
+      }
+      expected_stride *= self.shape()[i];
+    }
+    true
+  }
+
 }
 
 

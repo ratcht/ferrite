@@ -39,11 +39,10 @@ impl Segment for Linear {
     // Get weight parameter and access its tensor
     let weight: Rc<RefCell<Tensor>> = self.module.get_parameter("weight");
     let weight_tensor = weight.borrow_mut();
-    let w_t = weight_tensor.transpose();
 
     // Perform matrix multiplication
-    println!("Matmul: Self:{}\n Other:{}", input, w_t);
-    let output = input.matmul(&w_t, false, false);
+    println!("Matmul: Self:{}\n Other:{}", input, weight_tensor);
+    let output = input.matmul(&weight_tensor, false, true);
 
     // Add bias if present
     if self.module.has_parameter("bias") {

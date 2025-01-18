@@ -61,6 +61,10 @@ impl Tensor {
     self.grad.clone()
   }
 
+  pub fn shape(&self) -> &Vec<usize> {
+    &self.tensor().shape()
+  }
+
   pub fn backward(&mut self) {
     // Verify we're starting with a scalar
     if self.tensor().shape().len() != 1 || self.tensor().shape()[0] != 1 {

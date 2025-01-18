@@ -39,6 +39,14 @@ impl Module {
     self.modules.insert(name.to_string(), Rc::new(RefCell::new(module)));
   }
 
+  pub fn print_parameters(&self) {
+    fn closure(name: &str, param: &Tensor) {
+      println!("Parameter {}: {}", name, param);
+    }
+
+    self.visit_parameters(&mut closure);
+  }
+
   pub fn visit_parameters(&self, f: &mut dyn FnMut(&str, &Tensor)) {
     // Visit parameters in current module
     for (name, param) in &self.parameters {
