@@ -10,7 +10,7 @@ mod network;
 // Re-export the main types
 pub use tensor_storage::{TensorCreation, TensorOps, BLASTensorOps, TensorShape};
 pub use autograd::tensor::Tensor;
-pub use network::{Module, Segment, Layer};
+pub use network::{Module, Layer};
 
 // Version of the crate
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -19,5 +19,5 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub mod prelude {
   pub use crate::tensor_storage::{TensorCreation, TensorOps, BLASTensorOps, TensorShape};
   pub use crate::autograd::tensor::Tensor;
-  pub use crate::network::{Module, Segment, Layer};
+  pub use crate::network::{Module, Layer};
 }

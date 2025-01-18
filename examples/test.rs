@@ -23,7 +23,7 @@ fn main() {
 
 
   println!("Layer Stuff ---");
-  linear_layer.module.print_parameters();
+  linear_layer.print_parameters();
 
 
 

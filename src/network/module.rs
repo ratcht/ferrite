@@ -2,72 +2,35 @@ use crate::autograd::tensor::*;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::sync::{Arc, RwLock};
 
 
-pub trait Segment {
+pub trait Module {
   fn forward(&mut self, input: &Tensor) -> Tensor;
-}
+  
+  // Optional methods with defaults
+  fn parameters(&self) -> HashMap<String, Arc<RwLock<Tensor>>> {
+    HashMap::new()
+  }
+  
+  fn train(&mut self) { }
+  fn eval(&mut self) { }
+  fn zero_grad(&mut self) { }
 
-pub struct Module {
-  parameters: HashMap<String, Rc<RefCell<Tensor>>>,
-  modules: HashMap<String, Rc<RefCell<Module>>>,
-  training: bool
-}
-
-impl Module {
-  pub fn new() -> Self {
-    Module {
-      parameters: HashMap::new(),
-      modules: HashMap::new(),
-      training: false,
+  /// Visit all parameters with a callback function
+  fn visit_parameters(&self, f: &mut dyn FnMut(&str, &Tensor)) {
+    // Default implementation uses parameters()
+    for (name, param) in self.parameters() {
+      if let Ok(tensor) = param.read() {
+        f(&name, &tensor);
+      }
     }
   }
 
-  pub fn add_parameter(&mut self, name: &str, parameter: Tensor) {
-    self.parameters.insert(name.to_string(), Rc::new(RefCell::new(parameter)));
-  }
-
-  pub fn has_parameter(&self, name: &str) -> bool {
-    self.parameters.contains_key(name)
-  }
-
-  pub fn get_parameter(&mut self, name: &str) -> Rc<RefCell<Tensor>>{
-    self.parameters[name].clone()
-  }
-
-  pub fn add_module(&mut self, name: &str, module: Module) {
-    self.modules.insert(name.to_string(), Rc::new(RefCell::new(module)));
-  }
-
-  pub fn print_parameters(&self) {
-    fn closure(name: &str, param: &Tensor) {
-      println!("Parameter {}: {}", name, param);
-    }
-
-    self.visit_parameters(&mut closure);
-  }
-
-  pub fn visit_parameters(&self, f: &mut dyn FnMut(&str, &Tensor)) {
-    // Visit parameters in current module
-    for (name, param) in &self.parameters {
-      f(name, &*param.borrow());
-    }
-    
-    // Recursively visit child modules
-    for (name, module) in &self.modules {
-      module.borrow().visit_parameters(f);
-    }
-  }
-
-  pub fn train(&self) {
-
-  }
-
-  pub fn eval(&self) {
-
-  }
-
-  pub fn zero_grad(&self) {
-
+  /// Print all parameters and their shapes
+  fn print_parameters(&self) {
+    self.visit_parameters(&mut |name, param| {
+      println!("Parameter {}: shape={:?}", name, param.shape());
+    });
   }
 }
