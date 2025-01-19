@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use crate::tensor_storage::*;
-use super::function::*;
+use super::grad::*;
 use std::collections::HashSet;
 
 #[derive(Clone)]

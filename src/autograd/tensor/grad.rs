@@ -349,38 +349,29 @@ impl GradientFunction for MatMulGrad {
     let out_grad = self.output.grad().unwrap();
     let out_grad = out_grad.borrow();
 
-    println!("DEBUG - Shapes in backward:");
-    println!("out_grad shape: {:?}", out_grad.shape());
-    println!("lhs shape: {:?}", self.lhs.tensor().shape());
-    println!("rhs shape: {:?}", self.rhs.tensor().shape());
-
     // Case: C = t × w^T  (your test case)
     // t: (2,3), w: (2,3), C: (2,2)
     // dL/dt = dL/dC × w^T  - note: no transpose here since we already have w^T
     // dL/dw = (dL/dC × t)^T
 
     if let Some(lhs_grad) = &self.lhs.grad() {
-        println!("Computing lhs grad...");
-        // For input t: dL/dt = dL/dC × w^T
-        let grad_for_lhs = if !self.trans_b {
-            out_grad.matmul(self.rhs.tensor(), false, true)
-        } else {
-            out_grad.matmul(self.rhs.tensor(), false, false)
-        };
-        println!("lhs grad shape: {:?}", grad_for_lhs.shape());
-        lhs_grad.borrow_mut().add_tensor_assign(&grad_for_lhs);
+      // For input t: dL/dt = dL/dC × w^T
+      let grad_for_lhs = if !self.trans_b {
+          out_grad.matmul(self.rhs.tensor(), false, true)
+      } else {
+          out_grad.matmul(self.rhs.tensor(), false, false)
+      };
+      lhs_grad.borrow_mut().add_tensor_assign(&grad_for_lhs);
     }
 
     if let Some(rhs_grad) = &self.rhs.grad() {
-        println!("Computing rhs grad...");
-        // For weight w: dL/dw = (dL/dC × t)^T
-        let grad_for_rhs = if !self.trans_b {
-            self.lhs.tensor().matmul(&out_grad, true, false)
-        } else {
-            out_grad.matmul(&self.lhs.tensor(), true, false)
-        };
-        println!("rhs grad shape: {:?}", grad_for_rhs.shape());
-        rhs_grad.borrow_mut().add_tensor_assign(&grad_for_rhs);
+      // For weight w: dL/dw = (dL/dC × t)^T
+      let grad_for_rhs = if !self.trans_b {
+          self.lhs.tensor().matmul(&out_grad, true, false)
+      } else {
+          out_grad.matmul(&self.lhs.tensor(), true, false)
+      };
+      rhs_grad.borrow_mut().add_tensor_assign(&grad_for_rhs);
     }
   } 
 

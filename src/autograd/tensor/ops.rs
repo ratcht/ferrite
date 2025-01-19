@@ -1,6 +1,6 @@
 use crate::tensor_storage::*;
 use super::base::*;
-use super::function::*;
+use super::grad::*;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign, Div, DivAssign};
 use std::rc::Rc;
 use std::cell::RefCell;

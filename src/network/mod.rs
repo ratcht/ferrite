@@ -1,5 +1,4 @@
-mod module;
-pub mod layer;
+pub mod module;
 
-pub use module::*;
-pub use layer as Layer;
+pub use module::Module;
+pub use module as Layer;
