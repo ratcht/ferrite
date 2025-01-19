@@ -1,5 +1,5 @@
 use ndarray::prelude::*;
-use ferrite::{layer, prelude::*};
+use ferrite::prelude::*;
 
 
 

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
-use super::super::*;
+use super::module::*;
 use crate::autograd::tensor::*;
 
 

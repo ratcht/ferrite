@@ -26,6 +26,26 @@ impl TensorOps for Tensor {
     result
   }
 
+  fn sub_tensor(&self, other: &Self) -> Self {
+    // Compute the actual tensor addition
+    let tensor = self.tensor().sub_tensor(other.tensor());
+    
+    // Create result tensor
+    let requires_grad = *self.requires_grad() || *other.requires_grad();
+    let mut result = Tensor::new(tensor, requires_grad);
+    
+    // Set up gradient function if needed
+    if requires_grad {
+      result.set_grad_fn(Some(Rc::new(SubGrad::new(
+        self, 
+        other,
+        &result
+      ))));
+    }
+    
+    result
+  }
+
   fn mul_tensor(&self, other: &Self) -> Self {
     let tensor = self.tensor().mul_tensor(other.tensor());
     
@@ -34,6 +54,23 @@ impl TensorOps for Tensor {
     
     if requires_grad {
       result.set_grad_fn(Some(Rc::new(MulGrad::new(
+        self,
+        other,
+        &result
+      ))));
+    }
+    
+    result
+  }
+
+  fn div_tensor(&self, other: &Self) -> Self {
+    let tensor = self.tensor().div_tensor(other.tensor());
+    
+    let requires_grad = *self.requires_grad() || *other.requires_grad();
+    let mut result = Tensor::new(tensor, requires_grad);
+    
+    if requires_grad {
+      result.set_grad_fn(Some(Rc::new(DivGrad::new(
         self,
         other,
         &result
@@ -79,16 +116,25 @@ impl TensorOps for Tensor {
     result
   }
 
-  // Additional operations that don't have gradient implementations yet
-  fn sub_tensor(&self, other: &Self) -> Self {
-    let tensor = self.tensor().sub_tensor(other.tensor());
-    Tensor::new(tensor, false)
+
+  fn pow_f32(&self, other: f32) -> Self {
+    let tensor = self.tensor().pow_f32(other);
+    
+    let requires_grad = *self.requires_grad();
+    let mut result = Tensor::new(tensor, requires_grad);
+    
+    if requires_grad {
+      result.set_grad_fn(Some(Rc::new(PowF32Grad::new(
+        self,
+        other,
+        &result
+      ))));
+    }
+    
+    result
   }
 
-  fn div_tensor(&self, other: &Self) -> Self {
-    let tensor = self.tensor().div_tensor(other.tensor());
-    Tensor::new(tensor, false)
-  }
+  // Additional operations that don't have gradient implementations yet
 
   fn add_f32(&self, other: f32) -> Self {
     let tensor = self.tensor().add_f32(other);
@@ -109,6 +155,7 @@ impl TensorOps for Tensor {
     let tensor = self.tensor().div_f32(other);
     Tensor::new(tensor, false)
   }
+  
 
   // Assignment operations 
   fn add_tensor_assign(&mut self, other: &Self) {
@@ -142,6 +189,46 @@ impl TensorOps for Tensor {
   fn div_f32_assign(&mut self, other: f32) {
     self.tensor_mut().div_f32_assign(other);
   }
+
+  fn pow_f32_assign(&mut self, other: f32) {
+    self.tensor_mut().pow_f32_assign(other);
+  }
+
+  fn greater_than(&self, other: &Self, make_binary: bool) -> Self {
+    let tensor = self.tensor().greater_than(other.tensor(), make_binary);
+    Tensor::new(tensor, false)
+  }
+
+  fn less_than(&self, other: &Self, make_binary: bool) -> Self {
+    let tensor = self.tensor().less_than(other.tensor(), make_binary);
+    Tensor::new(tensor, false)
+  }
+
+  fn abs(&self) -> Self {
+    let tensor = self.tensor().abs();
+    Tensor::new(tensor, false)
+  }
+
+  fn abs_assign(&mut self) {
+    self.tensor_mut().abs_assign();
+  }
+
+  fn apply<F>(&self, op: F) -> Self
+  where
+    F: Fn(f32) -> f32,
+  {
+    let tensor = self.tensor().apply(op);
+    Tensor::new(tensor, false)
+  }
+  
+  fn apply_assign<F>(&mut self, op: F)
+  where
+    F: Fn(f32) -> f32,
+  {
+    self.tensor_mut().apply_assign(op);
+  }
+
+
 
 }
 

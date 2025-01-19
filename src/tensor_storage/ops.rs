@@ -27,10 +27,26 @@ pub trait TensorOps {
   fn div_f32(&self, other: f32) -> Self;
   fn div_f32_assign(&mut self, other: f32);
 
+  fn pow_f32(&self, other: f32) -> Self;
+  fn pow_f32_assign(&mut self, other: f32);
+
+  fn greater_than(&self, other: &Self, make_binary: bool) -> Self;
+  fn less_than(&self, other: &Self, make_binary: bool) -> Self;
+
+  fn abs(&self) -> Self;
+  fn abs_assign(&mut self);
 
   fn sum(&self) -> Self;
   fn product(&self) -> Self;
   fn mean(&self) -> Self;
+
+  fn apply<F>(&self, op: F) -> Self
+  where
+    F: Fn(f32) -> f32;
+
+  fn apply_assign<F>(&mut self, op: F)
+  where
+    F: Fn(f32) -> f32;
 }
 
 impl TensorOps for TensorStorage {
@@ -70,6 +86,10 @@ impl TensorOps for TensorStorage {
     self.scalar_op(other, |a, b| a / b)
   }
 
+  fn pow_f32(&self, other: f32) -> Self {
+    self.scalar_op(other, |a, b| f32::powf(a, b))
+  }
+
   fn add_tensor_assign(&mut self, other: &Self) {
     // Only broadcast one side
     let broadcast_b = other.broadcast(&self.shape());
@@ -104,8 +124,30 @@ impl TensorOps for TensorStorage {
     self.scalar_op_assign(other, |a, b| a / b)
   }
 
-  
+  fn pow_f32_assign(&mut self, other: f32) {
+    self.scalar_op_assign(other, |a, b| f32::powf(a, b))
+  }
 
+
+  fn greater_than(&self, other: &Self, make_binary: bool) -> Self {
+    let (tensor_a, tensor_b) = TensorStorage::broadcast_tensors(self, other);
+    tensor_a.elementwise_op(&tensor_b, |a, b| if a > b { 1.0 } else if make_binary { 0.0 } else {-1.0})
+  }
+
+  fn less_than(&self, other: &Self, make_binary: bool) -> Self {
+    let (tensor_a, tensor_b) = TensorStorage::broadcast_tensors(self, other);
+    tensor_a.elementwise_op(&tensor_b, |a, b| if a < b { 1.0 } else if make_binary { 0.0 } else {-1.0})
+  }
+
+
+  fn abs(&self) -> Self {
+    self.apply(|a| f32::abs(a))
+  }
+
+  fn abs_assign(&mut self) {
+    self.apply_assign(|a| f32::abs(a))
+  }
+  
   fn sum(&self) -> Self {
     let data: f32 = self.data().borrow().iter().sum();
     TensorStorage::from_ndarray(&array![data], None)
@@ -119,6 +161,28 @@ impl TensorOps for TensorStorage {
   fn mean(&self) -> Self {
     let data: f32 = f32::div(self.data().borrow().iter().sum(), self.data().borrow().len() as f32);
     TensorStorage::from_ndarray(&array![data], None)
+  }
+
+  fn apply<F>(&self, op: F) -> Self
+  where
+    F: Fn(f32) -> f32,
+  {
+    let data = self.data().borrow().iter()
+      .map(|a| op(*a))
+      .collect();
+
+    TensorStorage::new(data, self.shape().clone())
+  }
+
+  fn apply_assign<F>(&mut self, op: F)
+  where
+    F: Fn(f32) -> f32,
+  {
+    let data = self.data().borrow().iter()
+      .map(|a| op(*a))
+      .collect();
+
+    self.set_data(data);
   }
 }
 
@@ -191,7 +255,7 @@ impl BLASTensorOps for TensorStorage {
 
 impl TensorStorage {
 
-  fn elementwise_op<F>(&self, other: &Self, op: F) -> Self
+  pub fn elementwise_op<F>(&self, other: &Self, op: F) -> Self
   where
     F: Fn(f32, f32) -> f32,
   {
@@ -258,7 +322,7 @@ impl TensorStorage {
     TensorStorage::new(result, self.shape().clone())
   }
 
-  fn scalar_op<F>(&self, scalar: f32, op: F) -> Self
+  pub fn scalar_op<F>(&self, scalar: f32, op: F) -> Self
   where
     F: Fn(f32, f32) -> f32,
   {
@@ -269,7 +333,9 @@ impl TensorStorage {
     TensorStorage::new(data, self.shape().clone())
   }
 
-  fn elementwise_op_assign<F>(&mut self, other: &Self, op: F)
+  
+
+  pub fn elementwise_op_assign<F>(&mut self, other: &Self, op: F)
   where
     F: Fn(f32, f32) -> f32,
   {
@@ -336,7 +402,7 @@ impl TensorStorage {
     self.set_data(result);
   }
 
-  fn scalar_op_assign<F>(&mut self, scalar: f32, op: F)
+  pub fn scalar_op_assign<F>(&mut self, scalar: f32, op: F)
   where
     F: Fn(f32, f32) -> f32,
   {

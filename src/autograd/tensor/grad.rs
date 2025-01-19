@@ -1,8 +1,6 @@
-use std::rc::Rc;
-use std::cell::RefCell;
-use crate::tensor_storage::*;
+use crate::{reduce_grad, tensor_storage::*};
 use super::base::*;
-
+use crate::macros::*;
 pub trait GradientFunction: std::fmt::Debug {
   fn backward(&self);
   fn prev(&self) -> Vec<&Tensor>;
@@ -33,39 +31,59 @@ impl GradientFunction for AddGrad {
 
     // Propagate to lhs
     if let Some(lhs_grad) = &self.lhs.grad() {
-      let mut reduced_grad = out_grad.clone();
-      let lhs_shape = self.lhs.tensor().shape();
+      let reduced_grad = reduce_grad!(out_grad, self.lhs.tensor().shape());
+    
+      lhs_grad.borrow_mut().add_tensor_assign(&reduced_grad);
+    }
+    
+    // Propagate to rhs
+    if let Some(rhs_grad) = &self.rhs.grad() {
+      let reduced_grad = reduce_grad!(out_grad, self.rhs.tensor().shape());
       
-      // Reduce along broadcasted dimensions
-      for (dim, (grad_size, lhs_size)) in out_grad.shape().iter()
-        .zip(lhs_shape.iter())
-        .enumerate() 
-      {
-        if lhs_size == &1 && grad_size != &1 {
-          let mut sum_dims = vec![false; out_grad.shape().len()];
-          sum_dims[dim] = true;
-          reduced_grad = reduced_grad.sum_dim(&sum_dims);
-        }
-      }
+      rhs_grad.borrow_mut().add_tensor_assign(&reduced_grad);
+    }
+  }
+
+  fn prev(&self) -> Vec<&Tensor> {
+    vec![&self.lhs, &self.rhs]
+  }
+}
+
+
+#[derive(Debug)]
+pub struct SubGrad {
+  lhs: Tensor,
+  rhs: Tensor,
+  output: Tensor,
+}
+
+impl SubGrad {
+  pub fn new(lhs: &Tensor, rhs: &Tensor, output: &Tensor) -> Self {
+    SubGrad {
+      lhs: lhs.clone(),
+      rhs: rhs.clone(),
+      output: output.clone(),
+    }
+  }
+}
+
+impl GradientFunction for SubGrad {
+  fn backward(&self) {
+    // Get output gradient
+    let out_grad = self.output.grad().unwrap();
+    let out_grad = out_grad.borrow();
+
+    // Propagate to lhs
+    if let Some(lhs_grad) = &self.lhs.grad() {
+      let reduced_grad = reduce_grad!(out_grad, self.lhs.tensor().shape());
       
       lhs_grad.borrow_mut().add_tensor_assign(&reduced_grad);
     }
     
     // Propagate to rhs
     if let Some(rhs_grad) = &self.rhs.grad() {
-      let mut reduced_grad = out_grad.clone();
-      let rhs_shape = self.rhs.tensor().shape();
-      
-      for (dim, (grad_size, rhs_size)) in out_grad.shape().iter()
-        .zip(rhs_shape.iter())
-        .enumerate() 
-      {
-        if rhs_size == &1 && grad_size != &1 {
-          let mut sum_dims = vec![false; out_grad.shape().len()];
-          sum_dims[dim] = true;
-          reduced_grad = reduced_grad.sum_dim(&sum_dims);
-        }
-      }
+      let grad_for_rhs = &*out_grad * -1.;
+      let reduced_grad = reduce_grad!(grad_for_rhs, self.rhs.tensor().shape());
       
       rhs_grad.borrow_mut().add_tensor_assign(&reduced_grad);
     }
@@ -102,47 +120,18 @@ impl GradientFunction for MulGrad {
     if let Some(lhs_grad) = &self.lhs.grad() {
       let grad_for_lhs = &*out_grad * self.rhs.tensor();
       
-      // Handle broadcasting
-      let lhs_shape = self.lhs.tensor().shape();
-      let mut reduced_grad_for_lhs = grad_for_lhs.clone();
-      for (dim, (grad_size, lhs_size)) in grad_for_lhs.shape().iter()
-        .zip(lhs_shape.iter())
-        .enumerate() 
-      {
-        if lhs_size == &1 && grad_size != &1 {
-          let mut sum_dims = vec![false; grad_for_lhs.shape().len()];
-          sum_dims[dim] = true;
-          reduced_grad_for_lhs = reduced_grad_for_lhs.sum_dim(&sum_dims);
-        }
-      }
+      let reduced_grad = reduce_grad!(grad_for_lhs, self.lhs.tensor().shape());
       
-      lhs_grad.borrow_mut().add_tensor_assign(&reduced_grad_for_lhs);
-
+      lhs_grad.borrow_mut().add_tensor_assign(&reduced_grad);
     }
     
     // Propagate to rhs
     if let Some(rhs_grad) = &self.rhs.grad() {
       let grad_for_rhs = &*out_grad * self.lhs.tensor();
       
-      let rhs_shape = self.rhs.tensor().shape();
+      let reduced_grad = reduce_grad!(grad_for_rhs, self.rhs.tensor().shape());
 
-      let mut reduced_grad_for_rhs = grad_for_rhs.clone();
-      for (dim, (grad_size, rhs_size)) in grad_for_rhs.shape().iter()
-        .zip(rhs_shape.iter())
-        .enumerate() 
-      {
-
-        if rhs_size == &1 && grad_size != &1 {
-          let mut sum_dims = vec![false; grad_for_rhs.shape().len()];
-          sum_dims[dim] = true;
-          reduced_grad_for_rhs = reduced_grad_for_rhs.sum_dim(&sum_dims);
-        }
-
-      }
-
-
-      
-      rhs_grad.borrow_mut().add_tensor_assign(&reduced_grad_for_rhs);
+      rhs_grad.borrow_mut().add_tensor_assign(&reduced_grad);
     }
   }
 
@@ -150,6 +139,93 @@ impl GradientFunction for MulGrad {
     vec![&self.lhs, &self.rhs]
   }
 }
+
+
+#[derive(Debug)]
+pub struct DivGrad {
+  lhs: Tensor,
+  rhs: Tensor,
+  output: Tensor,
+}
+
+impl DivGrad {
+  pub fn new(lhs: &Tensor, rhs: &Tensor, output: &Tensor) -> Self {
+    DivGrad {
+      lhs: lhs.clone(),
+      rhs: rhs.clone(),
+      output: output.clone(),
+    }
+  }
+}
+
+impl GradientFunction for DivGrad {
+  fn backward(&self) {
+    let out_grad = self.output.grad().unwrap();
+    let out_grad = out_grad.borrow();
+
+    // Propagate to lhs
+    if let Some(lhs_grad) = &self.lhs.grad() {
+      let grad_for_lhs = &*out_grad / self.rhs.tensor();
+      
+      let reduced_grad = reduce_grad!(grad_for_lhs, self.lhs.tensor().shape());
+      
+      lhs_grad.borrow_mut().add_tensor_assign(&reduced_grad);
+    }
+    
+    // Propagate to rhs
+    if let Some(rhs_grad) = &self.rhs.grad() {
+      // Form grad for rhs
+      let grad_for_rhs = &(&*out_grad * self.lhs.tensor()).mul_f32(-1.) / &(self.rhs.tensor().pow_f32(-2.));
+      
+      let reduced_grad = reduce_grad!(grad_for_rhs, self.rhs.tensor().shape());
+
+      rhs_grad.borrow_mut().add_tensor_assign(&reduced_grad);
+    }
+  }
+
+  fn prev(&self) -> Vec<&Tensor> {
+    vec![&self.lhs, &self.rhs]
+  }
+}
+
+#[derive(Debug)]
+pub struct PowF32Grad {
+  lhs: Tensor,
+  rhs: f32,
+  output: Tensor,
+}
+
+impl PowF32Grad {
+  pub fn new(lhs: &Tensor, rhs: f32, output: &Tensor) -> Self {
+    PowF32Grad {
+      lhs: lhs.clone(),
+      rhs: rhs,
+      output: output.clone(),
+    }
+  }
+}
+
+impl GradientFunction for PowF32Grad {
+  fn backward(&self) {
+    let out_grad = self.output.grad().unwrap();
+    let out_grad = out_grad.borrow();
+
+    // Propagate to lhs
+    if let Some(lhs_grad) = &self.lhs.grad() {
+      let grad_for_lhs = &(&*out_grad * self.rhs) * &self.lhs.tensor().pow_f32(self.rhs-1.);
+      
+      let reduced_grad = reduce_grad!(grad_for_lhs, self.lhs.tensor().shape());
+      
+      lhs_grad.borrow_mut().add_tensor_assign(&reduced_grad);
+
+    }
+  }
+
+  fn prev(&self) -> Vec<&Tensor> {
+    vec![&self.lhs]
+  }
+}
+
 
 #[derive(Debug)]
 pub struct SumGrad {
@@ -357,9 +433,9 @@ impl GradientFunction for MatMulGrad {
     if let Some(lhs_grad) = &self.lhs.grad() {
       // For input t: dL/dt = dL/dC × w^T
       let grad_for_lhs = if !self.trans_b {
-          out_grad.matmul(self.rhs.tensor(), false, true)
+        out_grad.matmul(self.rhs.tensor(), false, true)
       } else {
-          out_grad.matmul(self.rhs.tensor(), false, false)
+        out_grad.matmul(self.rhs.tensor(), false, false)
       };
       lhs_grad.borrow_mut().add_tensor_assign(&grad_for_lhs);
     }
@@ -367,9 +443,9 @@ impl GradientFunction for MatMulGrad {
     if let Some(rhs_grad) = &self.rhs.grad() {
       // For weight w: dL/dw = (dL/dC × t)^T
       let grad_for_rhs = if !self.trans_b {
-          self.lhs.tensor().matmul(&out_grad, true, false)
+        self.lhs.tensor().matmul(&out_grad, true, false)
       } else {
-          out_grad.matmul(&self.lhs.tensor(), true, false)
+        out_grad.matmul(&self.lhs.tensor(), true, false)
       };
       rhs_grad.borrow_mut().add_tensor_assign(&grad_for_rhs);
     }
