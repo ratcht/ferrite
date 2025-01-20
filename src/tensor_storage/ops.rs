@@ -31,8 +31,11 @@ pub trait TensorOps {
   fn pow_f32_assign(&mut self, other: f32);
 
   fn greater_than(&self, other: &Self, make_binary: bool) -> Self;
+  fn greater_than_f32(&self, other: f32, make_binary: bool) -> Self;
   fn less_than(&self, other: &Self, make_binary: bool) -> Self;
+  fn less_than_f32(&self, other: f32, make_binary: bool) -> Self;
 
+  fn sign(&self) -> Self;
   fn abs(&self) -> Self;
   fn abs_assign(&mut self);
 
@@ -134,9 +137,21 @@ impl TensorOps for TensorStorage {
     tensor_a.elementwise_op(&tensor_b, |a, b| if a > b { 1.0 } else if make_binary { 0.0 } else {-1.0})
   }
 
+  fn greater_than_f32(&self, other: f32, make_binary: bool) -> Self {
+    self.scalar_op(other, |a, b| if a > b { 1.0 } else if make_binary { 0.0 } else {-1.0})
+  }
+
   fn less_than(&self, other: &Self, make_binary: bool) -> Self {
     let (tensor_a, tensor_b) = TensorStorage::broadcast_tensors(self, other);
     tensor_a.elementwise_op(&tensor_b, |a, b| if a < b { 1.0 } else if make_binary { 0.0 } else {-1.0})
+  }
+
+  fn less_than_f32(&self, other: f32, make_binary: bool) -> Self {
+    self.scalar_op(other, |a, b| if a < b { 1.0 } else if make_binary { 0.0 } else {-1.0})
+  }
+
+  fn sign(&self) -> Self {
+    self.apply(|a| if a > 0. { 1.0 } else if a < 0. { -1. } else { 0.0 })
   }
 
 

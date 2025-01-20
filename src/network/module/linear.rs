@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 use super::module::*;
-use crate::autograd::tensor::*;
+use crate::tensor::*;
 use crate::{BLASTensorOps, TensorCreation};
 
 // Linear layer implementation
@@ -58,7 +58,7 @@ impl Module for Linear {
     if let Some(bias) = &self.bias {
       let bias = bias.read()
                      .unwrap();
-      output = &output + &bias;
+      output = &output + &*bias;
     } 
     output
   }

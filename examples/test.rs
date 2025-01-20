@@ -1,25 +1,29 @@
 use ndarray::prelude::*;
 use ferrite::prelude::*;
+use Loss::Loss;
 
 
 
 fn main() {
-  let input = Tensor::from_ndarray(&array![[1., 2., 3.], [4., 5., 6.]], Some(true));
-  println!("Input: {}", input);
+  let x = Tensor::from_ndarray(&array![[2., 2., 3.], [4., 4., 6.]], Some(true));
+  println!("x: {}", x);
 
-  let mut sequential = Layer::Sequential::new(vec![
-    layer!(Linear::new(3, 5, true)),
-    layer!(Linear::new(5, 4, false)),
-    layer!(Linear::new(4, 3, false)),
-  ]);
+  let y = Tensor::from_ndarray(&array![[3., 3., 1.], [6., 5., 6.]], Some(true));
+  println!("y: {}", y);
 
-  let output = sequential.forward(&input);
+  let mut z = Tensor::from_ndarray(&array![[0.1, -0.2, 1.], [-6.5, 0.0, 6.3]], Some(true));
+  println!("z: {}", z);
+
+  let output = &x / &y;
 
   println!("Output: {:?}", output);
 
-  let mut f = output.sum();
+  let loss_fn = loss::MAELoss::new("mean");
+
+  let mut f = loss_fn.loss(&output, &y);
 
   f.backward();
 
-  println!("Input Grad: {:?}", input.grad());
+  println!("x Grad: {:?}", x.grad());
+  println!("y Grad: {:?}", y.grad());
 }

@@ -1,6 +1,6 @@
 use crate::tensor_storage::*;
 use super::base::*;
-use super::grad::*;
+use crate::autograd::*;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign, Div, DivAssign};
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -138,22 +138,85 @@ impl TensorOps for Tensor {
 
   fn add_f32(&self, other: f32) -> Self {
     let tensor = self.tensor().add_f32(other);
-    Tensor::new(tensor, false)
+    
+    let requires_grad = *self.requires_grad();
+    let mut result = Tensor::new(tensor, requires_grad);
+    
+    if requires_grad {
+      result.set_grad_fn(Some(Rc::new(AddF32Grad::new(
+        self,
+        other,
+        &result
+      ))));
+    }
+    
+    result
   }
-
   fn sub_f32(&self, other: f32) -> Self {
     let tensor = self.tensor().sub_f32(other);
-    Tensor::new(tensor, false)
+    
+    let requires_grad = *self.requires_grad();
+    let mut result = Tensor::new(tensor, requires_grad);
+    
+    if requires_grad {
+      result.set_grad_fn(Some(Rc::new(SubF32Grad::new(
+        self,
+        other,
+        &result
+      ))));
+    }
+    
+    result
   }
 
   fn mul_f32(&self, other: f32) -> Self {
     let tensor = self.tensor().mul_f32(other);
-    Tensor::new(tensor, false)
+    
+    let requires_grad = *self.requires_grad();
+    let mut result = Tensor::new(tensor, requires_grad);
+    
+    if requires_grad {
+      result.set_grad_fn(Some(Rc::new(MulF32Grad::new(
+        self,
+        other,
+        &result
+      ))));
+    }
+    
+    result
   }
 
   fn div_f32(&self, other: f32) -> Self {
     let tensor = self.tensor().div_f32(other);
-    Tensor::new(tensor, false)
+    
+    let requires_grad = *self.requires_grad();
+    let mut result = Tensor::new(tensor, requires_grad);
+    
+    if requires_grad {
+      result.set_grad_fn(Some(Rc::new(DivF32Grad::new(
+        self,
+        other,
+        &result
+      ))));
+    }
+    
+    result
+  }
+
+  fn abs(&self) -> Self {
+    let tensor = self.tensor().abs();
+    
+    let requires_grad = *self.requires_grad();
+    let mut result = Tensor::new(tensor, requires_grad);
+    
+    if requires_grad {
+      result.set_grad_fn(Some(Rc::new(AbsGrad::new(
+        self,
+        &result
+      ))));
+    }
+    
+    result
   }
   
 
@@ -199,13 +262,23 @@ impl TensorOps for Tensor {
     Tensor::new(tensor, false)
   }
 
+  fn greater_than_f32(&self, other: f32, make_binary: bool) -> Self {
+    let tensor = self.tensor().greater_than_f32(other, make_binary);
+    Tensor::new(tensor, false)
+  }
+
   fn less_than(&self, other: &Self, make_binary: bool) -> Self {
     let tensor = self.tensor().less_than(other.tensor(), make_binary);
     Tensor::new(tensor, false)
   }
 
-  fn abs(&self) -> Self {
-    let tensor = self.tensor().abs();
+  fn less_than_f32(&self, other: f32, make_binary: bool) -> Self {
+    let tensor = self.tensor().less_than_f32(other, make_binary);
+    Tensor::new(tensor, false)
+  }
+
+  fn sign(&self) -> Self {
+    let tensor = self.tensor().sign();
     Tensor::new(tensor, false)
   }
 
@@ -261,9 +334,51 @@ impl Add<&Tensor> for &Tensor {
   }
 }
 
+impl Add<f32> for &Tensor {
+  type Output = Tensor;
+  fn add(self, rhs: f32) -> Self::Output {
+    self.add_f32(rhs)
+  }
+}
+
+impl Sub<&Tensor> for &Tensor {
+  type Output = Tensor;
+  fn sub(self, rhs: &Tensor) -> Self::Output {
+    self.sub_tensor(rhs)
+  }
+}
+
+impl Sub<f32> for &Tensor {
+  type Output = Tensor;
+  fn sub(self, rhs: f32) -> Self::Output {
+    self.sub_f32(rhs)
+  }
+}
+
 impl Mul<&Tensor> for &Tensor {
   type Output = Tensor;
   fn mul(self, rhs: &Tensor) -> Self::Output {
     self.mul_tensor(rhs)
+  }
+}
+
+impl Mul<f32> for &Tensor {
+  type Output = Tensor;
+  fn mul(self, rhs: f32) -> Self::Output {
+    self.mul_f32(rhs)
+  }
+}
+
+impl Div<&Tensor> for &Tensor {
+  type Output = Tensor;
+  fn div(self, rhs: &Tensor) -> Self::Output {
+    self.div_tensor(rhs)
+  }
+}
+
+impl Div<f32> for &Tensor {
+  type Output = Tensor;
+  fn div(self, rhs: f32) -> Self::Output {
+    self.div_f32(rhs)
   }
 }

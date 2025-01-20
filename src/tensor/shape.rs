@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::tensor_storage::*;
 use crate::TensorShape;
 use super::base::*;
-use super::PermuteGrad;
+use crate::autograd::PermuteGrad;
 
 impl TensorShape for Tensor {
   fn reshape(&mut self, new_shape: Vec<usize>) {

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
 use super::module::*;
-use crate::autograd::tensor::*;
+use crate::tensor::*;
 
 
 pub struct Sequential {

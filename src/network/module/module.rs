@@ -1,4 +1,4 @@
-use crate::autograd::tensor::*;
+use crate::tensor::*;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
