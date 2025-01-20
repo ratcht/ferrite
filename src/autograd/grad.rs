@@ -1,4 +1,4 @@
-use crate::{reduce_grad, tensor_storage::*, tensor::*};
+use crate::{reduce_grad, tensor::*};
 use crate::macros::*;
 pub trait GradientFunction: std::fmt::Debug {
   fn backward(&self);

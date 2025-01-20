@@ -1,6 +1,5 @@
 use super::loss::*;
 use crate::tensor::*;
-use crate::tensor_storage::*;
 
 pub struct MSELoss {
   is_mean_reduction: bool

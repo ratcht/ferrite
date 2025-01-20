@@ -1,4 +1,4 @@
-use crate::tensor_storage::*;
+use super::tensor_storage::*;
 use super::base::*;
 use ndarray;
 use num_traits;

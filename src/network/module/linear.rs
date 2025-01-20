@@ -3,7 +3,6 @@ use std::sync::{Arc, RwLock};
 
 use super::module::*;
 use crate::tensor::*;
-use crate::{BLASTensorOps, TensorCreation};
 
 // Linear layer implementation
 pub struct Linear {

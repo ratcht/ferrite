@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use crate::tensor_storage::*;
+use super::tensor_storage::*;
 use crate::autograd::*;
 use std::collections::HashSet;
 

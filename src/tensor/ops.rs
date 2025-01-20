@@ -1,4 +1,4 @@
-use crate::tensor_storage::*;
+use super::tensor_storage::*;
 use super::base::*;
 use crate::autograd::*;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign, Div, DivAssign};
