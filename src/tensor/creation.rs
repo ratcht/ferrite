@@ -1,35 +1,36 @@
-use super::tensor_storage::*;
-use super::base::*;
+use crate::*;
 use ndarray;
 use num_traits;
 
-impl TensorCreation for Tensor {
-  fn zeros(shape: Vec<usize>, requires_grad: Option<bool>) -> Self {
-    let tensor = TensorStorage::zeros(shape, None);
+
+
+impl Tensor {
+  pub fn zeros(shape: Vec<usize>, device: Device, requires_grad: Option<bool>) -> Self {
+    let tensor = Storage::zeros(shape, Some(device), None);
     let requires_grad = requires_grad.unwrap_or(false);
-    Tensor::new(tensor, requires_grad)
+    Tensor::new(tensor, device, requires_grad)
   }
 
-  fn ones(shape: Vec<usize>, requires_grad: Option<bool>) -> Self {
-    let tensor = TensorStorage::ones(shape, None);
+  pub fn ones(shape: Vec<usize>, device: Device, requires_grad: Option<bool>) -> Self {
+    let tensor = Storage::ones(shape, Some(device), None);
     let requires_grad = requires_grad.unwrap_or(false);
-    Tensor::new(tensor, requires_grad)
+    Tensor::new(tensor, device, requires_grad)
   }
 
-  fn from_ndarray<S, D, T>(data: &ndarray::ArrayBase<S, D>, requires_grad: Option<bool>) -> Self
+  pub fn from_ndarray<S, D, T>(data: &ndarray::ArrayBase<S, D>, device: Device, requires_grad: Option<bool>) -> Self
   where 
     S: ndarray::Data<Elem = T>,
     T: num_traits::AsPrimitive<f32>,
     D: ndarray::Dimension 
   {
-    let tensor = TensorStorage::from_ndarray(data, None);
+    let tensor = Storage::from_ndarray(data, Some(device), None);
     let requires_grad = requires_grad.unwrap_or(false);
-    Tensor::new(tensor, requires_grad)
+    Tensor::new(tensor, device, requires_grad)
   }
 
-  fn uniform(l_bound: f32, r_bound: f32, shape: Vec<usize>, requires_grad: Option<bool>) -> Self {
-    let tensor = TensorStorage::uniform(l_bound, r_bound, shape, None);
+  pub fn uniform(l_bound: f32, r_bound: f32, shape: Vec<usize>, device: Device, requires_grad: Option<bool>) -> Self {
+    let tensor = Storage::uniform(l_bound, r_bound, shape, Some(device), None);
     let requires_grad = requires_grad.unwrap_or(false);
-    Tensor::new(tensor, requires_grad)
+    Tensor::new(tensor, device, requires_grad)
   }
 }

@@ -6,8 +6,8 @@ use ndarray::prelude::*;
 
 
 fn main() {
-  let a = Tensor::from_ndarray(&array![[1.,2.,3.],[4.,5.,6.]], Some(true)); //(2x3)
-  let b = Tensor::from_ndarray(&array![[2.,2.,2.,2.,1.], [2.,2.,2.,2.,1.], [2.,2.,2.,2.,1.]], Some(true)); //(3,5)
+  let a = Tensor::from_ndarray(&array![[1.,2.,3.],[4.,5.,6.]], Device::Cpu, Some(true)); //(2x3)
+  let b = Tensor::from_ndarray(&array![[2.,2.,2.,2.,1.], [2.,2.,2.,2.,1.], [2.,2.,2.,2.,1.]], Device::Cpu, Some(true)); //(3,5)
 
   let y = a.matmul(&b, false, false);
   

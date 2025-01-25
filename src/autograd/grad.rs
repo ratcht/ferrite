@@ -1,5 +1,20 @@
-use crate::{reduce_grad, tensor::*};
+use crate::tensor::*;
 use crate::macros::*;
+
+macro_rules! reduce_grad {
+  ($grad:expr, $shape:expr) => {{
+    let mut reduced_grad = $grad.clone();
+    for (dim, (grad_size, shape_size)) in $grad.shape().iter().zip($shape.iter()).enumerate() {
+      if shape_size == &1 && grad_size != &1 {
+        let mut sum_dims = vec![false; $grad.shape().len()];
+        sum_dims[dim] = true;
+        reduced_grad = reduced_grad.sum_dim(&sum_dims);
+      }
+    }
+    reduced_grad
+  }};
+}
+
 pub trait GradientFunction: std::fmt::Debug {
   fn backward(&self);
   fn prev(&self) -> Vec<&Tensor>;
@@ -429,11 +444,12 @@ impl SumGrad {
 
 impl GradientFunction for SumGrad {
   fn backward(&self) {
+    let device = self.output.device();
     if let Some(input_grad) = &self.input.grad() {
       if let Some(out_grad) = &self.output.grad() {
         // For sum, we need to expand the gradient to match input shape
         let input_shape = self.input.tensor().shape();
-        let ones = TensorStorage::ones(input_shape.clone(), None);
+        let ones = Storage::ones(input_shape.clone(), Some(device), None);
         let expanded_grad = &ones * out_grad.borrow().get(&[0]);
         input_grad.borrow_mut().add_tensor_assign(&expanded_grad);
       }
@@ -462,12 +478,14 @@ impl MeanGrad {
 
 impl GradientFunction for MeanGrad {
   fn backward(&self) {
+    let device = self.output.device();
+
     if let Some(input_grad) = &self.input.grad() {
       if let Some(out_grad) = &self.output.grad() {
         // For mean, expand gradient and divide by number of elements
         let input_shape = self.input.tensor().shape();
         let n_elements = input_shape.iter().product::<usize>() as f32;
-        let ones = TensorStorage::ones(input_shape.clone(), None);
+        let ones = Storage::ones(input_shape.clone(), Some(device), None);
         let expanded_grad = &ones * (out_grad.borrow().get(&[0]) / n_elements);
         input_grad.borrow_mut().add_tensor_assign(&expanded_grad);
       }
@@ -496,11 +514,13 @@ impl ProductGrad {
 
 impl GradientFunction for ProductGrad {
   fn backward(&self) {
+    let device = self.output.device();
+
     if let Some(input_grad) = &self.input.grad() {
       if let Some(out_grad) = &self.output.grad() {
         // For product, each element's gradient is the product of all other elements
         let input_data = self.input.tensor();
-        let mut grad = TensorStorage::zeros(input_data.shape().clone(), None);
+        let mut grad = Storage::zeros(input_data.shape().clone(), Some(device), None);
         let total_product = self.output.tensor().get(&[0]);
         
         // For each element, divide total product by that element to get product of others

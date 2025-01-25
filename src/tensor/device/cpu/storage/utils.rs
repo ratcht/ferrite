@@ -1,4 +1,4 @@
-use super::base::TensorStorage;  // Import from parent module's base.rs
+use crate::*;  // Import from parent module's base.rs
 
 use std::fmt;
 
@@ -8,19 +8,19 @@ pub trait Display {
   fn print_data(&self);
 }
 
-impl fmt::Display for TensorStorage {
+impl fmt::Display for CpuStorage {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     write!(f, "{}", Self::print_data_recursive(&self.data().borrow(), self.shape(), self.stride()))
   }
 }
 
-impl fmt::Debug for TensorStorage {
+impl fmt::Debug for CpuStorage {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     write!(f, "{}", Self::print_data_recursive(&self.data().borrow(), self.shape(), self.stride()))
   }
 }
 
-impl Display for TensorStorage {
+impl Display for CpuStorage {
   fn print(&self) {
     println!("Data: {:?}", self.data());
     println!("Shape: {:?}", self.shape());

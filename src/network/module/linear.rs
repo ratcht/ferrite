@@ -13,15 +13,15 @@ pub struct Linear {
 
 
 impl Linear {
-  pub fn new(in_features: usize, out_features: usize, bias: bool) -> Self {
+  pub fn new(in_features: usize, out_features: usize, bias: bool, device: Device) -> Self {
     let bound = f32::sqrt(1./in_features as f32);
     let weight = Arc::new(RwLock::new(
       //Tensor::uniform(-bound, bound, vec![out_features, in_features], Some(true))
-      Tensor::ones(vec![out_features, in_features], Some(true))
+      Tensor::ones(vec![out_features, in_features], device, Some(true))
     ));
 
     let bias = if bias {
-      Some(Arc::new(RwLock::new(Tensor::zeros(vec![out_features], Some(false)))))
+      Some(Arc::new(RwLock::new(Tensor::zeros(vec![out_features], device, Some(false)))))
     } else {
       None
     };

@@ -1,48 +1,58 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use super::tensor_storage::*;
-use crate::autograd::*;
+use super::storage::*;
+use crate::{grad_storage, GradientFunction, CpuStorage};
 use std::collections::HashSet;
+
+
+pub type GradientStorage = Rc<RefCell<Storage>>;
 
 #[derive(Clone)]
 pub struct Tensor {
-  tensor: TensorStorage,
+  pub storage: Storage,
+  device: Device,
   requires_grad: bool,
   grad_fn: Option<Rc<dyn GradientFunction>>,
-  grad: Option<Rc<RefCell<TensorStorage>>>,
+  grad: Option<GradientStorage>,
 }
 
 impl Tensor {
-  pub fn new(tensor: TensorStorage, requires_grad: bool) -> Self {
+  pub fn new(storage: Storage, device: Device, requires_grad: bool) -> Self {
     let grad = if requires_grad {
-      Some(Rc::new(RefCell::new(TensorStorage::zeros(tensor.shape().clone(), None))))
+      Some(Rc::new(RefCell::new(Storage::zeros(storage.shape().clone(), Some(device), None))))
     } else {
       None
     };
     
     Tensor {
-      tensor,
-      requires_grad,
+      storage: storage,
+      device: device,
+      requires_grad: requires_grad,
       grad_fn: None,
-      grad,
+      grad: grad,
     }
   }
 
-  pub fn view(&self, tensor: TensorStorage) -> Self {
+  pub fn view(&self, tensor: Storage) -> Self {
     Tensor {
-      tensor: tensor,
+      storage: tensor,
+      device: self.device,
       requires_grad: self.requires_grad,
       grad_fn: self.grad_fn.clone(),
-      grad: self.grad.clone()
+      grad: self.grad.clone(),
     }
   }
 
-  pub fn tensor(&self) -> &TensorStorage {
-    &self.tensor
+  pub fn tensor(&self) -> &Storage {
+    &self.storage
   }
 
-  pub fn tensor_mut(&mut self) -> &mut TensorStorage {
-    &mut self.tensor
+  pub fn tensor_mut(&mut self) -> &mut Storage {
+    &mut self.storage
+  }
+
+  pub fn device(&self) -> Device {
+    self.device
   }
 
   pub fn requires_grad(&self) -> &bool {
@@ -57,7 +67,7 @@ impl Tensor {
     self.grad_fn = grad_fn;
   }
 
-  pub fn grad(&self) -> Option<Rc<RefCell<TensorStorage>>> {
+  pub fn grad(&self) -> Option<GradientStorage> {
     self.grad.clone()
   }
 

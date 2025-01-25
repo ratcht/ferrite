@@ -14,6 +14,7 @@ mod macros;
 // Re-export the main types
 pub use tensor::*;
 pub use network::*;
+pub use autograd::*;
 
 // Version of the crate
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
