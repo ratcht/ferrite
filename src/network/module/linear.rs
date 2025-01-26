@@ -47,16 +47,14 @@ impl Linear {
 impl Module for Linear {
   fn forward(&mut self, input: &Tensor) -> Tensor {
     // Get weight parameter and access its tensor
-    let weight = self.weight.read()
-                            .unwrap();
+    let weight = self.weight.read().unwrap();
 
     // Perform matrix multiplication
     let mut output = input.matmul(&weight, false, true);
 
     // Add bias if present
     if let Some(bias) = &self.bias {
-      let bias = bias.read()
-                     .unwrap();
+      let bias = bias.read().unwrap();
       output = &output + &*bias;
     } 
     output
