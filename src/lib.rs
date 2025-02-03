@@ -3,6 +3,10 @@
 //! This crate provides a dynamic computation graph with automatic differentiation,
 //! designed for building and training neural networks.
 
+#![allow(unreachable_patterns)]
+#![allow(unused_variables)]
+#![allow(dead_code)]
+
 mod autograd;
 mod tensor;
 mod network;

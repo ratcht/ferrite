@@ -1,7 +1,6 @@
 use crate::*;
 use std::{ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign}, rc::Rc};
 
-
 pub trait ArithmeticOps {
   fn add_tensor(&self, other: &Self) -> Self;
   fn add_tensor_assign(&mut self, other: &Self);
@@ -38,46 +37,6 @@ pub trait ArithmeticOps {
   fn sign(&self) -> Self;
   fn abs(&self) -> Self;
   fn abs_assign(&mut self);
-}
-
-macro_rules! match_storage {
-  // Binary operation with two storage arguments
-  (binary $self:expr, $method:ident, $other:expr $(, $args:expr)*) => {
-    match ($self, $other) {
-      (Storage::Cpu(cpu_self), Storage::Cpu(cpu_other)) => {
-        Storage::Cpu(cpu_self.$method(cpu_other $(, $args)*))
-      }
-      _ => unimplemented!("Cross-device operations not supported"),
-    }
-  };
-
-  // Unary operation with single storage argument
-  (unary $self:expr, $method:ident $(, $args:expr)*) => {
-    match $self {
-      Storage::Cpu(cpu) => Storage::Cpu(cpu.$method($($args),*)),
-      _ => unimplemented!("Device not supported"),
-    }
-  };
-}
-
-macro_rules! match_storage_assign {
-  // Binary operation with two storage arguments
-  (binary $self:expr, $method:ident, $other:expr $(, $args:expr)*) => {
-    match ($self, $other) {
-      (Storage::Cpu(cpu_self), Storage::Cpu(cpu_other)) => {
-        cpu_self.$method(cpu_other $(, $args)*)
-      }
-      _ => unimplemented!("Cross-device operations not supported"),
-    }
-  };
-
-  // Unary operation with single storage argument
-  (unary $self:expr, $method:ident $(, $args:expr)*) => {
-    match $self {
-      Storage::Cpu(cpu) => cpu.$method($($args)*),
-      _ => unimplemented!("Device not supported"),
-    }
-  };
 }
 
 impl ArithmeticOps for Storage {

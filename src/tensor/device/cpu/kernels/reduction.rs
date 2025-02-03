@@ -17,4 +17,6 @@ impl ReductionOps for CpuStorage {
     let data: f32 = self.data().borrow().iter().sum::<f32>() / self.data().borrow().len() as f32;
     CpuStorage::from_ndarray(&array![data], None, None)
   }
+
+  
 }

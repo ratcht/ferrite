@@ -21,7 +21,6 @@ pub trait DeviceStorageStatic : DeviceStorage {
   fn create(data: Rc<RefCell<Vec<f32>>>, shape: Vec<usize>, stride: Vec<usize>) -> Self;
 
   fn compute_strides(shape: &Vec<usize>) -> Vec<usize>;
-
 }
 
 pub trait DeviceStorageCreation : DeviceStorage {

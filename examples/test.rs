@@ -26,4 +26,9 @@ fn main() {
 
   println!("x Grad: {:?}", x.grad());
   println!("y Grad: {:?}", y.grad());
+  let y = Tensor::from_ndarray(&array![[3., 3.], [6., 5.], [6., 5.]], Device::Cpu, Some(true));
+
+  let gex = x.matmul(&y, false, false);
+  println!("gex: {:?}", gex);
+
 }

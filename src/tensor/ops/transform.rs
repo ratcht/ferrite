@@ -1,4 +1,4 @@
-use crate::{DeviceStorage, Storage};
+use crate::{DeviceStorage, Storage, match_storage, match_storage_assign};
 
 
 pub trait TransformOps {
@@ -26,10 +26,7 @@ pub trait TransformOps {
   where
   F: Fn(f32, f32) -> f32;
 
-  
-
   fn sum_dim(&self, dims: &[bool]) -> Self;
-
   fn reshape(&mut self, new_shape: Vec<usize>);
   fn permute(&mut self, dims: &[usize]);
   fn transpose(&self) -> Self;
@@ -60,26 +57,6 @@ macro_rules! match_storage {
   (unary $self:expr, $method:ident $(, $args:expr)*) => {
     match $self {
       Storage::Cpu(cpu) => Storage::Cpu(cpu.$method($($args),*)),
-      _ => unimplemented!("Device not supported"),
-    }
-  };
-}
-
-macro_rules! match_storage_assign {
-  // Binary operation with two storage arguments
-  (binary $self:expr, $method:ident, $other:expr $(, $args:expr)*) => {
-    match ($self, $other) {
-      (Storage::Cpu(cpu_self), Storage::Cpu(cpu_other)) => {
-        cpu_self.$method(cpu_other $(, $args)*)
-      }
-      _ => unimplemented!("Cross-device operations not supported"),
-    }
-  };
-
-  // Unary operation with single storage argument
-  (unary $self:expr, $method:ident $(, $args:expr)*) => {
-    match $self {
-      Storage::Cpu(cpu) => cpu.$method($($args),*),
       _ => unimplemented!("Device not supported"),
     }
   };

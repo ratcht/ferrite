@@ -1,41 +1,6 @@
 use crate::{reduce_grad, tensor::*};
 use super::super::grad::*;
 
-#[derive(Debug)]
-pub struct AbsGrad {
-  lhs: Tensor,
-  output: Tensor,
-}
-
-impl AbsGrad {
-  pub fn new(lhs: &Tensor, output: &Tensor) -> Self {
-    AbsGrad {
-      lhs: lhs.clone(),
-      output: output.clone(),
-    }
-  }
-}
-
-impl GradientFunction for AbsGrad {
-  fn backward(&self) {
-    let out_grad = self.output.grad().unwrap();
-    let out_grad = out_grad.borrow();
-
-    // Propagate to lhs
-    if let Some(lhs_grad) = &self.lhs.grad() {
-      let grad_for_lhs = &*out_grad * &self.lhs.tensor().sign();
-      
-      let reduced_grad = reduce_grad!(grad_for_lhs, self.lhs.tensor().shape());
-      
-      lhs_grad.borrow_mut().add_tensor_assign(&reduced_grad);
-    }
-  }
-
-  fn prev(&self) -> Vec<&Tensor> {
-    vec![&self.lhs]
-  }
-}
-
 
 #[derive(Debug)]
 pub struct SumGrad {
@@ -152,3 +117,4 @@ impl GradientFunction for ProductGrad {
     vec![&self.input]
   }
 }
+

@@ -1,34 +1,12 @@
 use std::rc::Rc;
-
-use crate::{DeviceStorage, MeanGrad, ProductGrad, Storage, SumGrad, Tensor};
+use crate::{DeviceStorage, MeanGrad, ProductGrad, Storage, SumGrad, Tensor, match_storage, match_storage_assign};
 
 pub trait ReductionOps {
   fn sum(&self) -> Self;
   fn product(&self) -> Self;
   fn mean(&self) -> Self;
-
-  // add other ops here
 }
 
-macro_rules! match_storage {
-  // Binary operation with two storage arguments
-  (binary $self:expr, $method:ident, $other:expr $(, $args:expr)*) => {
-    match ($self, $other) {
-      (Storage::Cpu(cpu_self), Storage::Cpu(cpu_other)) => {
-        Storage::Cpu(cpu_self.$method(cpu_other $(, $args)*))
-      }
-      _ => unimplemented!("Cross-device operations not supported"),
-    }
-  };
-
-  // Unary operation with single storage argument
-  (unary $self:expr, $method:ident $(, $args:expr)*) => {
-    match $self {
-      Storage::Cpu(cpu) => Storage::Cpu(cpu.$method($($args),*)),
-      _ => unimplemented!("Device not supported"),
-    }
-  };
-}
 
 impl ReductionOps for Storage {
   fn sum(&self) -> Self {

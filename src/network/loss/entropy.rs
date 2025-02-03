@@ -1,31 +1,17 @@
 use super::loss::*;
 use crate::tensor::*;
 
-pub struct MSELoss {
-  is_mean_reduction: bool
+pub struct CrossEntropyLoss {
 }
 
-impl MSELoss {
+impl CrossEntropyLoss {
   pub fn new(reduction: &str) -> Self {
-    let is_mean_reduction = match reduction {
-      "mean" => true,
-      "sum" => false,
-      _ => panic!("Reduction must be either 'mean' or 'sum'"),
-    };
-
-    Self{ is_mean_reduction }
+    unimplemented!()
   }
 }
 
-impl Loss for MSELoss {
+impl Loss for CrossEntropyLoss {
   fn loss(&self, x: &Tensor, y: &Tensor) -> Tensor {
-    let z_1 = x.sub_tensor(y);
-    let z_2 = z_1.pow_f32(2.); 
-
-    if self.is_mean_reduction {
-      z_2.mean()
-    } else {
-      z_2.sum()
-    }
+    unimplemented!()
   }
 }
