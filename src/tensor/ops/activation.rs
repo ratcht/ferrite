@@ -9,7 +9,7 @@ pub trait ActivationOps {
   fn leaky_relu(&self) -> Self;
   fn parametric_relu(&self, a: f32) -> Self;
   fn elu(&self, alpha: f32) -> Self;
-  fn softmax(&self) -> Self;
+  fn softmax(&self, dim: usize) -> Self;
   fn swish(&self) -> Self;
 }
 
@@ -42,8 +42,8 @@ impl ActivationOps for Storage {
     match_storage!(unary self, elu, alpha)
   }
 
-  fn softmax(&self) -> Self {
-    match_storage!(unary self, softmax)
+  fn softmax(&self, dim: usize) -> Self {
+    match_storage!(unary self, softmax, dim)
   }
 
   fn swish(&self) -> Self {
@@ -181,8 +181,8 @@ impl ActivationOps for Tensor {
     result
   }
   
-  fn softmax(&self) -> Self {
-    let tensor = self.tensor().softmax();
+  fn softmax(&self, dim: usize) -> Self {
+    let tensor = self.tensor().softmax(dim);
     
     // Create result tensor
     let requires_grad = *self.requires_grad();

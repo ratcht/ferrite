@@ -279,7 +279,36 @@ impl SoftmaxGrad {
 
 impl GradientFunction for SoftmaxGrad {
   fn backward(&self) {
-    unimplemented!()
+    // Get output gradient
+    let out_grad = self.output.grad().unwrap();
+    let out_grad = out_grad.borrow();
+
+    // Propagate to lhs
+    if let Some(lhs_grad) = &self.lhs.grad() {
+      // Get the softmax output: s = softmax(x)
+      let s = self.output.tensor();
+
+      // Compute the elementwise product: (dL/ds * s)
+      let grad_times_s = &*out_grad * s;
+
+      // Determine the axis over which softmax was computed.
+      // For example, if softmax is computed over the last dimension:
+      let axis = s.shape().len() - 1;
+      
+      // Sum the product along the softmax axis. This gives, for each sample,
+      // the inner product \(\sum_j s_j * (dL/ds)_j\).
+      let sum_along_axis = grad_times_s.sum_axis(axis);
+      
+      // Efficient gradient for softmax:
+      // dL/dx = s * (dL/ds - sum(s * dL/ds))
+      let grad_for_lhs = s * &(&*out_grad - &sum_along_axis);
+
+      // If necessary, reduce the gradient to match the shape of the lhs Tensor.
+      let reduced_grad = reduce_grad!(grad_for_lhs, self.lhs.tensor().shape());
+      
+      // Add the computed gradient to the lhs gradient.
+      lhs_grad.borrow_mut().add_tensor_assign(&reduced_grad);
+    }
   }
 
   fn prev(&self) -> Vec<&Tensor> {

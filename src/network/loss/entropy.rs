@@ -2,16 +2,18 @@ use super::loss::*;
 use crate::tensor::*;
 
 pub struct CrossEntropyLoss {
+  
 }
 
 impl CrossEntropyLoss {
-  pub fn new(reduction: &str) -> Self {
-    unimplemented!()
+  pub fn new() -> Self {
+    CrossEntropyLoss { }
   }
 }
 
-impl Loss for CrossEntropyLoss {
+impl LossTrait for CrossEntropyLoss {
   fn loss(&self, x: &Tensor, y: &Tensor) -> Tensor {
     unimplemented!()
+
   }
 }

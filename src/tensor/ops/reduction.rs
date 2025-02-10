@@ -3,6 +3,7 @@ use crate::{DeviceStorage, MeanGrad, ProductGrad, Storage, SumGrad, Tensor, matc
 
 pub trait ReductionOps {
   fn sum(&self) -> Self;
+  fn sum_axis(&self, axis: usize) -> Self;
   fn product(&self) -> Self;
   fn mean(&self) -> Self;
 }
@@ -11,6 +12,10 @@ pub trait ReductionOps {
 impl ReductionOps for Storage {
   fn sum(&self) -> Self {
     match_storage!(unary self, sum)
+  }
+
+  fn sum_axis(&self, axis: usize) -> Self {
+    match_storage!(unary self, sum_axis, axis)
   }
 
   fn product(&self) -> Self {
@@ -32,6 +37,14 @@ impl ReductionOps for Tensor {
     if requires_grad {
       result.set_grad_fn(Some(Rc::new(SumGrad::new(self, &result))));
     }
+    
+    result
+  }
+
+  fn sum_axis(&self, axis: usize) -> Self {
+    let tensor = self.tensor().sum_axis(axis);
+    let requires_grad = *self.requires_grad();
+    let mut result = Tensor::new(tensor, self.device(), requires_grad);
     
     result
   }

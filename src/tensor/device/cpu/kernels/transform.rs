@@ -5,7 +5,7 @@ impl TransformOps for CpuStorage {
   where
     F: Fn(f32) -> f32,
   {
-    let data = self.data().borrow().iter()
+    let data = self.data().read().unwrap().iter()
       .map(|a| op(*a))
       .collect();
 
@@ -21,9 +21,9 @@ impl TransformOps for CpuStorage {
     
     // Get data once to avoid multiple borrows
     let self_binding = self.data();
-    let self_data = self_binding.borrow();
+    let self_data = self_binding.read().unwrap();
     let other_binding = other.data();
-    let other_data = other_binding.borrow();
+    let other_data = other_binding.read().unwrap();
     
     // Pre-calculate dimensions for faster access
     let rank = self.shape().len();
@@ -87,7 +87,7 @@ impl TransformOps for CpuStorage {
   where
     F: Fn(f32, f32) -> f32,
   {
-    let data = self.data().borrow().iter()
+    let data = self.data().read().unwrap().iter()
       .map(|a| op(*a, scalar))
       .collect();
 
@@ -135,7 +135,7 @@ impl TransformOps for CpuStorage {
   where
     F: Fn(f32) -> f32,
   {
-    let data = self.data().borrow().iter()
+    let data = self.data().read().unwrap().iter()
       .map(|a| op(*a))
       .collect();
 
@@ -151,9 +151,9 @@ impl TransformOps for CpuStorage {
     
     // Get data once to avoid multiple borrows
     let self_binding = self.data();
-    let self_data = self_binding.borrow();
+    let self_data = self_binding.read().unwrap();
     let other_binding = other.data();
-    let other_data = other_binding.borrow();
+    let other_data = other_binding.read().unwrap();
     
     // Pre-calculate dimensions for faster access
     let rank = self.shape().len();
@@ -213,7 +213,7 @@ impl TransformOps for CpuStorage {
   where
     F: Fn(f32, f32) -> f32,
   {
-    let data = self.data().borrow().iter()
+    let data = self.data().read().unwrap().iter()
       .map(|a| op(*a, scalar))
       .collect();
 
@@ -234,7 +234,7 @@ impl TransformOps for CpuStorage {
 
     // If all dimensions are summed, return scalar
     if new_shape.is_empty() {
-        let sum: f32 = self.data().borrow().iter().sum();
+        let sum: f32 = self.data().read().unwrap().iter().sum();
         return Self::new(vec![sum], vec![1]);
     }
 
@@ -247,8 +247,10 @@ impl TransformOps for CpuStorage {
     
     // Sum values maintaining non-summed dimensions
     let mut sum = 0.0;
-    for i in 0..self.data().borrow().len() {
-        sum += self.data().borrow()[i];
+    let binding = self.data();
+    let data = binding.read().unwrap();
+    for i in 0..data.len() {
+        sum += data[i];
     }
     result[0] = sum;
 

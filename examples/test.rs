@@ -1,6 +1,5 @@
 use ndarray::prelude::*;
 use ferrite::prelude::*;
-use Loss::Loss;
 
 
 
@@ -8,27 +7,31 @@ fn main() {
   let x = Tensor::from_ndarray(&array![[2., 2., 3.], [4., 4., 6.]], Device::Cpu, Some(true));
   println!("x: {}", x);
 
-  let y = Tensor::from_ndarray(&array![[3., 3., 1.], [6., 5., 6.]], Device::Cpu, Some(true));
+  let x_t = x.transpose();
+  println!("x_t: {}", x_t);
+
+  let y = Tensor::from_ndarray(&array![[12., 2., 3.], [44., 4., 6.]], Device::Cpu, Some(true));
   println!("y: {}", y);
 
-  let mut z = Tensor::from_ndarray(&array![[0.1, -0.2, 1.], [-6.5, 0.0, 6.3]], Device::Cpu, Some(true));
-  println!("z: {}", z);
+  let z = y.matmul(&x_t, false, false);
+  println!("z: {:?}", z);
 
-  let output = &x / &y;
+  let b = Tensor::from_ndarray(&array![[13.1, 22.5], [4.6, 4.5]], Device::Cpu, Some(true));
 
-  println!("Output: {:?}", output);
+  let c = &z / &b;
+  println!("c: {:?}", c);
 
-  let loss_fn = loss::MAELoss::new("mean");
+  let d = c.softmax(1);
+  println!("d: {:?}", d);
 
-  let mut f = loss_fn.loss(&output, &y);
+  let target = Tensor::from_ndarray(&array![0., 1.], Device::Cpu, Some(true));
+  let loss_fn = Loss::MAELoss::new("mean");
 
-  f.backward();
+  let mut loss = loss_fn.loss(&c, &target);
+  println!("loss: {:?}", loss);
 
-  println!("x Grad: {:?}", x.grad());
-  println!("y Grad: {:?}", y.grad());
-  let y = Tensor::from_ndarray(&array![[3., 3.], [6., 5.], [6., 5.]], Device::Cpu, Some(true));
+  loss.backward();
+  println!("x grad: {:?}", x.grad());
 
-  let gex = x.matmul(&y, false, false);
-  println!("gex: {:?}", gex);
 
 }

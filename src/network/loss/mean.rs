@@ -17,7 +17,7 @@ impl MSELoss {
   }
 }
 
-impl Loss for MSELoss {
+impl LossTrait for MSELoss {
   fn loss(&self, x: &Tensor, y: &Tensor) -> Tensor {
     let z_1 = x.sub_tensor(y);
     let z_2 = z_1.pow_f32(2.); 
@@ -47,7 +47,7 @@ impl MAELoss {
   }
 }
 
-impl Loss for MAELoss {
+impl LossTrait for MAELoss {
   fn loss(&self, x: &Tensor, y: &Tensor) -> Tensor {
     let z_1 = x.sub_tensor(y);
     let z_2 = z_1.abs(); 

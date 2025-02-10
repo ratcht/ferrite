@@ -99,8 +99,8 @@ impl GradientFunction for ProductGrad {
         let total_product = self.output.tensor().get(&[0]);
         
         // For each element, divide total product by that element to get product of others
-        for i in 0..input_data.data().borrow().len() {
-          let element = input_data.data().borrow()[i];
+        for i in 0..input_data.data().read().unwrap().len() {
+          let element = input_data.data().read().unwrap()[i];
           if element != 0.0 {
             grad.data_mut()[i] = total_product / element;
           }
