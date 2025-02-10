@@ -1,3 +1,5 @@
+use std::sync::{Arc, RwLock};
+
 use crate::*;
 
 
@@ -25,11 +27,11 @@ impl DeviceStorage for Storage {
     match_self!(storage self, view(new_shape))
   }
 
-  fn data(&self) -> std::rc::Rc<std::cell::RefCell<Vec<f32>>> {
+  fn data(&self) -> Arc<RwLock<Vec<f32>>> {
     match_self!(call self, data())
   }
 
-  fn data_mut(&self) -> std::cell::RefMut<Vec<f32>> {
+  fn data_mut(&self) -> std::sync::RwLockWriteGuard<Vec<f32>> {
     match_self!(call self, data_mut())
   }
 
@@ -51,6 +53,10 @@ impl DeviceStorage for Storage {
 
   fn set_stride(&mut self, stride: Vec<usize>) {
     match_self!(call self, set_stride(stride));
+  }
+
+  fn offset(&self) -> usize {
+    match_self!(call self, offset())
   }
 
   fn get(&self, indices: &[usize]) -> f32 {

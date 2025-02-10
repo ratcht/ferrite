@@ -187,6 +187,7 @@ dependencies = [
  "num-traits",
  "paste",
  "rand",
+ "rayon",
 ]
 
 [[package]]

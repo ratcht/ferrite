@@ -10,13 +10,13 @@ pub trait Display {
 
 impl fmt::Display for CpuStorage {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "{}", Self::print_data_recursive(&self.data().borrow(), self.shape(), self.stride()))
+    write!(f, "{}", Self::print_data_recursive(&self.data().read().unwrap(), self.shape(), self.stride()))
   }
 }
 
 impl fmt::Debug for CpuStorage {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "{}", Self::print_data_recursive(&self.data().borrow(), self.shape(), self.stride()))
+    write!(f, "{}", Self::print_data_recursive(&self.data().read().unwrap(), self.shape(), self.stride()))
   }
 }
 
@@ -55,7 +55,7 @@ impl Display for CpuStorage {
   }
 
   fn print_data(&self) {
-    let res = Self::print_data_recursive(&self.data().borrow(), self.shape(), self.stride());
+    let res = Self::print_data_recursive(&self.data().read().unwrap(), self.shape(), self.stride());
     println!("{}", res);
   }
 }

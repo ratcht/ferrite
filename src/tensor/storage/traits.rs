@@ -1,4 +1,5 @@
-use std::rc::Rc;
+use std::sync::Arc;
+use std::{rc::Rc, sync::RwLock};
 use std::cell::RefCell;
 use ndarray::{ArrayBase, Dimension};
 use num_traits::cast::AsPrimitive;
@@ -18,7 +19,7 @@ pub trait DeviceStorageStatic : DeviceStorage {
 
   fn new_with_stride(data: Vec<f32>, shape: Vec<usize>, stride: Vec<usize>) -> Self;
 
-  fn create(data: Rc<RefCell<Vec<f32>>>, shape: Vec<usize>, stride: Vec<usize>) -> Self;
+  fn create(data: Arc<RwLock<Vec<f32>>>, shape: Vec<usize>, stride: Vec<usize>) -> Self;
 
   fn compute_strides(shape: &Vec<usize>) -> Vec<usize>;
 }
@@ -39,9 +40,9 @@ pub trait DeviceStorageCreation : DeviceStorage {
 pub trait DeviceStorage  {
   fn view(&self, new_shape: Vec<usize>) -> Self where Self: Sized;
 
-  fn data(&self) -> Rc<RefCell<Vec<f32>>>;
+  fn data(&self) -> Arc<RwLock<Vec<f32>>>;
 
-  fn data_mut(&self) -> std::cell::RefMut<Vec<f32>>;
+  fn data_mut(&self) -> std::sync::RwLockWriteGuard<Vec<f32>>;
 
   fn set_data(&mut self, data: Vec<f32>);
 
@@ -52,6 +53,8 @@ pub trait DeviceStorage  {
   fn stride(&self) -> &Vec<usize>;
 
   fn set_stride(&mut self, stride: Vec<usize>);
+
+  fn offset(&self) -> usize;
 
   fn get(&self, indices: &[usize]) -> f32;
 
