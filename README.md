@@ -1,4 +1,4 @@
-# Ferrite: A Deep Learning Library in Rust
+# Ferrite: A Deep Learning Library in Rust * *DOCS OUTDATED* *
 
 A deep learning framework written in pure Rust, inspired by PyTorch. Used this to learn Rust and refine DL concepts.
 
