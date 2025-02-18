@@ -27,9 +27,13 @@ pub trait Module {
   }
 
   /// Print all parameters and their shapes
-  fn print_parameters(&self) {
+  fn print_parameters(&self, values: bool) {
     self.visit_parameters(&mut |name, param| {
-      println!("Parameter {}: shape={:?}", name, param.shape());
+      if values {
+        println!("Parameter {}: shape={:?}. values={:?}", name, param.shape(), param);
+      } else {
+        println!("Parameter {}: shape={:?}", name, param.shape());
+      }
     });
   }
 }

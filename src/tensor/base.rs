@@ -71,6 +71,10 @@ impl Tensor {
     self.grad.clone()
   }
 
+  pub fn grad_mut(&mut self) -> GradientStorage {
+    self.grad.clone().expect("Grad can't be empty")
+  }
+
   pub fn shape(&self) -> &Vec<usize> {
     &self.tensor().shape()
   }

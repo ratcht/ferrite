@@ -1,6 +1,7 @@
 {
   "conventionalCommits.scopes": [
     "Operations",
-    "Base"
+    "Base",
+    "Network"
   ]
 }

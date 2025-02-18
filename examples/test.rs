@@ -4,34 +4,31 @@ use ferrite::prelude::*;
 
 
 fn main() {
-  let x = Tensor::from_ndarray(&array![[2., 2., 3.], [4., 4., 6.]], Device::Cpu, Some(true));
-  println!("x: {}", x);
+  let layer1 = layer!(Linear::new(3, 4, false, Device::Cpu));
+  let layer2 = layer!(Linear::new(4, 2, false, Device::Cpu));
 
-  let x_t = x.transpose();
-  println!("x_t: {}", x_t);
+  let mut model = Layer::Sequential::new(vec![layer1, layer2]);
 
-  let y = Tensor::from_ndarray(&array![[12., 2., 3.], [44., 4., 6.]], Device::Cpu, Some(true));
-  println!("y: {}", y);
+  model.print_parameters(true);
 
-  let z = y.matmul(&x_t, false, false);
-  println!("z: {:?}", z);
+  let input = Tensor::from_ndarray(&array![[1.,2.,3.], [4.,4.,4.]], Device::Cpu, Some(true));
 
-  let b = Tensor::from_ndarray(&array![[13.1, 22.5], [4.6, 4.5]], Device::Cpu, Some(true));
+  let predicted_y = model.forward(&input);
+  
+  println!("predicted_y: {:?}", predicted_y);
 
-  let c = &z / &b;
-  println!("c: {:?}", c);
+  let loss_fn = Loss::MSELoss::new("mean");
+  let optimizer = Optimizer::SGD::new(model.parameters(), 0.01, 0.0);
 
-  let d = c.softmax(1);
-  println!("d: {:?}", d);
+  let ground_y = Tensor::from_ndarray(&array![[30.,30.], [50.,50.]], Device::Cpu, Some(false));
 
-  let target = Tensor::from_ndarray(&array![0., 1.], Device::Cpu, Some(true));
-  let loss_fn = Loss::MAELoss::new("mean");
+  let mut f = loss_fn.loss(&predicted_y, &ground_y);
 
-  let mut loss = loss_fn.loss(&c, &target);
-  println!("loss: {:?}", loss);
+  println!("f: {:?}", f);
+  
+  f.backward();
 
-  loss.backward();
-  println!("x grad: {:?}", x.grad());
+  optimizer.step();
 
-
+  model.print_parameters(true);
 }
