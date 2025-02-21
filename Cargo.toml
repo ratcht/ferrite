@@ -1,9 +1,9 @@
 [package]
 name = "ferrite-dl"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["a2alhama@uwaterloo.ca"]
-description = "Basic deep learning library written in pure Rust"
+description =  "Deep learning library written in pure Rust"
 readme = "README.md"
 repository = "https://github.com/ratcht/ferrite"
 license = "MIT"
