@@ -2,26 +2,26 @@ use ferrite::prelude::*;
 use ndarray::prelude::*;
 
 
-
-
-
 fn main() {
-  let a = Tensor::from_ndarray(&array![[1.,2.,3.],[4.,5.,6.]], Device::Cpu, Some(true)); //(2x3)
-  let b = Tensor::from_ndarray(&array![[2.,2.,2.,2.,1.], [2.,2.,2.,2.,1.], [2.,2.,2.,2.,1.]], Device::Cpu, Some(true)); //(3,5)
+  let mut model = Layer::Sequential::new(vec![
+    layer!(Linear::new(3, 4, false, Device::Cpu)),
+    layer!(Linear::new(4, 2, false, Device::Cpu))
+  ]);
 
-  let y = a.matmul(&b, false, false);
+  let loss_fn = Loss::MSELoss::new("mean");
+  let optimizer = Optimizer::SGD::new(model.parameters(), 0.01, 0.0);
+
+
+  let input = Tensor::from_ndarray(&array![[1.,2.,3.], [4.,4.,4.]], Device::Cpu, Some(true));
+  let output = model.forward(&input);
   
-  let mut f = y.sum();
+  let ground_y = Tensor::from_ndarray(&array![[30.,30.], [50.,50.]], Device::Cpu, Some(false));
+
+  let mut f = loss_fn.loss(&output, &ground_y);
+
   f.backward();
 
-  println!("A: {}", a);
-  println!("B: {}", b);
-  println!("y: {}", y);
-  println!("f: {}", f);
+  optimizer.step();
 
-  println!("grad: A: {:?}", a.grad());
-  println!("grad: B: {:?}", b.grad());
-  println!("grad: y: {:?}", y.grad());
-  println!("grad: f: {:?}", f.grad());
-
+  model.print_parameters(true);
 }
