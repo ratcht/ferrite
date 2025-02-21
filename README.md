@@ -141,11 +141,7 @@ Ferrite is built with a modular architecture:
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
-
-[Add your chosen license here]
-
 ## Acknowledgments
 
 - PyTorch (for inspiration)
-- Claude (for teaching Rust)
+- Claude (for teaching me Rust)
