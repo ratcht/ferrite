@@ -12,7 +12,7 @@ cargo add ferrite-dl
 Or manually add to your `Cargo.toml`:
 ```toml
 [dependencies]
-ferrite-dl = "0.1.0"
+ferrite-dl = "0.2.0"
 ```
 
 ## Features
