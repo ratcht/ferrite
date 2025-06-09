@@ -128,7 +128,7 @@ Ferrite is built with a modular architecture:
 
 ## Future Plans
 
-- [ ] Add CUDA and MPS support
+- [✓] Add CUDA and MPS support
 - [ ] Implement more optimizers (Adam, RMSprop)
 - [ ] Add more loss functions
 - [ ] Add convolution operations
